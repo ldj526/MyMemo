@@ -34,7 +34,7 @@ class NewMemoActivity : AppCompatActivity() {
             } else {
                 val title = editTitle.text.toString()
                 val content = editContent.text.toString()
-                memo = Memo(null, title, content)
+                memo = Memo(null, title, content, false)
                 replyIntent.putExtra(EXTRA_REPLY, memo)
                 setResult(Activity.RESULT_OK, replyIntent)
             }

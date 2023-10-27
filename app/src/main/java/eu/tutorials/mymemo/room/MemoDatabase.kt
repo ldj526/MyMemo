@@ -9,7 +9,7 @@ import eu.tutorials.mymemo.model.Memo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-@Database(entities = [Memo::class], version = 1, exportSchema = false)
+@Database(entities = [Memo::class], version = 2, exportSchema = false)
 abstract class MemoDatabase : RoomDatabase() {
     abstract fun memoDao(): MemoDao
 
@@ -36,7 +36,7 @@ abstract class MemoDatabase : RoomDatabase() {
                     context.applicationContext,
                     MemoDatabase::class.java,
                     "memo_database"
-                ).addCallback(MemoDatabaseCallback(scope)).build()
+                ).addCallback(MemoDatabaseCallback(scope)).fallbackToDestructiveMigration().build()
                 INSTANCE = instance
                 instance
             }

@@ -3,6 +3,7 @@ package eu.tutorials.mymemo.activity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import eu.tutorials.mymemo.R
@@ -13,9 +14,13 @@ class MemoListAdapter :
 
     private var memoList = ArrayList<Memo>()
     private var fullList = ArrayList<Memo>()
+    private var showCheckBoxes = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MemoViewHolder {
-        return MemoViewHolder.create(parent)
+        return MemoViewHolder(
+            LayoutInflater.from(parent.context)
+                .inflate(R.layout.recyclerview_item, parent, false)
+        )
     }
 
     override fun onBindViewHolder(
@@ -23,21 +28,26 @@ class MemoListAdapter :
         position: Int
     ) {  // onCreateViewHolder와 MemoViewHolder를 바인딩한다.
         val current = memoList[position]
-        holder.title.text = current.title
-        holder.content.text = current.content
+        holder.bind(current)
     }
 
-    class MemoViewHolder(itemView: View) :
+    inner class MemoViewHolder(itemView: View) :
         RecyclerView.ViewHolder(itemView) {
 
+        val checkBox: CheckBox = itemView.findViewById(R.id.checkBox)
         val title: TextView = itemView.findViewById(R.id.tv_title)
         val content: TextView = itemView.findViewById(R.id.tv_content)
 
-        companion object {
-            fun create(parent: ViewGroup): MemoViewHolder {
-                val view: View = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.recyclerview_item, parent, false)
-                return MemoViewHolder(view)
+        fun bind(memo: Memo) {
+            title.text = memo.title
+            content.text = memo.content
+            checkBox.isChecked = memo.isChecked
+            checkBox.visibility =
+                if (showCheckBoxes) View.VISIBLE else View.GONE
+            itemView.setOnLongClickListener {
+                showCheckBoxes = !showCheckBoxes
+                notifyDataSetChanged()
+                true
             }
         }
     }
@@ -53,6 +63,7 @@ class MemoListAdapter :
         }
         notifyDataSetChanged()
     }
+
     fun setMemo(memos: List<Memo>) {
         fullList.clear()
         fullList.addAll(memos)

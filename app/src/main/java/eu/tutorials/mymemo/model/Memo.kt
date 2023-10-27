@@ -12,5 +12,7 @@ data class Memo(
     @ColumnInfo(name = "title")  // 테이블의 열 이름
     val title: String?,
     @ColumnInfo(name = "content")  // 테이블의 열 이름
-    val content: String?
-): Serializable
+    val content: String?,
+    @ColumnInfo(name = "check")
+    var isChecked: Boolean = false
+) : Serializable
