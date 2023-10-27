@@ -4,13 +4,17 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.LinearLayout
-import android.widget.SearchView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
+import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -28,13 +32,15 @@ class MainActivity : AppCompatActivity() {
         MemoViewModelFactory((application as MemosApplication).repository)
     }
     private lateinit var launcher: ActivityResultLauncher<Intent>
+    private val adapter = MemoListAdapter()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val searchView = findViewById<SearchView>(R.id.searchView)
+        val toolbar = findViewById<Toolbar>(R.id.toolBar)
+        setSupportActionBar(toolbar)
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerview)
-        val adapter = MemoListAdapter()
         recyclerView.adapter = adapter
         recyclerView.layoutManager = StaggeredGridLayoutManager(2, LinearLayout.VERTICAL)
 
@@ -69,10 +75,24 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+
+        val fab = findViewById<FloatingActionButton>(R.id.fab)
+        fab.setOnClickListener {
+            val intent = Intent(this@MainActivity, NewMemoActivity::class.java)
+            launcher.launch(intent)
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.search_menu, menu)
+
+        val searchItem = menu?.findItem(R.id.searchIcon)
+        val searchView = searchItem?.actionView as SearchView
+
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             // 검색 버튼 입력 시 호출
             override fun onQueryTextSubmit(query: String?): Boolean {
-                return false
+                return true
             }
 
             // 텍스트 입력 or 수정 시에 호출
@@ -84,10 +104,6 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        val fab = findViewById<FloatingActionButton>(R.id.fab)
-        fab.setOnClickListener {
-            val intent = Intent(this@MainActivity, NewMemoActivity::class.java)
-            launcher.launch(intent)
-        }
+        return true
     }
 }
