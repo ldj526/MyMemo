@@ -1,6 +1,5 @@
 package eu.tutorials.mymemo.activity
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,8 +14,13 @@ class MemoListAdapter :
 
     private var memoList = ArrayList<Memo>()
     private var fullList = ArrayList<Memo>()
-    private var showCheckBoxes = false
+    var showCheckBoxes = false
     var onItemLongClicked: (() -> Unit)? = null
+    private var checkboxChangedListener: OnCheckboxChangedListener? = null
+
+    interface OnCheckboxChangedListener {
+        fun onCheckboxChanged(selectedCount: Int)
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MemoViewHolder {
         return MemoViewHolder(
@@ -49,6 +53,9 @@ class MemoListAdapter :
             // Checkbox 상태 변화 check
             checkBox.setOnCheckedChangeListener { _, isChecked ->
                 memo.isChecked = isChecked
+                // checkbox에 check된 개수
+                val selectedCount = memoList.count { it.isChecked }
+                checkboxChangedListener?.onCheckboxChanged(selectedCount)
             }
             itemView.setOnLongClickListener {
                 onItemLongClicked?.invoke()
@@ -56,6 +63,29 @@ class MemoListAdapter :
                 true
             }
         }
+    }
+
+    // checkbox 보이기/숨기기 상태
+    fun setCheckboxVisibility(isVisible: Boolean) {
+        showCheckBoxes = isVisible
+        notifyDataSetChanged()
+    }
+
+    // memoList의 상태를 함수화
+    fun getCheckboxStates(): List<Boolean> {
+        return memoList.map { it.isChecked }
+    }
+
+    // checkbox check 상태 확인
+    fun updateCheckboxStates(states: MutableList<Boolean>){
+        for (i in memoList.indices) {
+            memoList[i].isChecked = states[i]
+        }
+        notifyDataSetChanged()
+    }
+
+    fun setOnCheckboxChangedListener(listener: OnCheckboxChangedListener) {
+        this.checkboxChangedListener = listener
     }
 
     // 검색할 때 filter하는 함수

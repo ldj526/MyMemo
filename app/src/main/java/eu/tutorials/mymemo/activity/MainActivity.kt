@@ -14,12 +14,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.Observer
-import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.google.android.material.bottomappbar.BottomAppBar
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import eu.tutorials.mymemo.MemoViewModel
 import eu.tutorials.mymemo.MemoViewModelFactory
 import eu.tutorials.mymemo.MemosApplication
@@ -43,6 +39,12 @@ class MainActivity : AppCompatActivity() {
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // 화면 회전 시 BottomAppBar 유지시키기 위함
+        savedInstanceState?.let {
+            val isBottomAppBarVisible = it.getBoolean("BOTTOM_APPBAR_VISIBLE")
+            binding.bottomAppbar.visibility = if (isBottomAppBarVisible) View.VISIBLE else View.GONE
+        }
+
         setSupportActionBar(binding.toolBar)
         binding.recyclerview.adapter = adapter
         binding.recyclerview.layoutManager = StaggeredGridLayoutManager(2, LinearLayout.VERTICAL)
@@ -55,8 +57,19 @@ class MainActivity : AppCompatActivity() {
             memos?.let { adapter.setMemo(it) }
         })
 
+        // checkbox check 상태
+        memoViewModel.checkboxStates.observe(this, Observer { states ->
+            adapter.updateCheckboxStates(states)
+        })
+
+        // checkbox 보이기 / 숨기기
+        memoViewModel.isCheckboxVisible.observe(this, Observer { isVisible ->
+            adapter.setCheckboxVisibility(isVisible)
+        })
+
         adapter.onItemLongClicked = {
             toggleBottomAppBarVisibility()
+            toggleFabVisibility()
         }
 
         launcher =
@@ -86,6 +99,7 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this@MainActivity, NewMemoActivity::class.java)
             launcher.launch(intent)
         }
+
         binding.bottomAppbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 // BottomAppBar에서 Delete를 눌렀을 때
@@ -94,13 +108,49 @@ class MainActivity : AppCompatActivity() {
                     memoViewModel.delete(selectedItems) // ViewModel에서 삭제 로직 호출
                     adapter.notifyDataSetChanged() // Adapter에 데이터 변경 알림
                     adapter.showCheckboxes()
-                    toggleBottomAppBarVisibility()
+                    binding.bottomAppbar.visibility = View.GONE
+                    binding.fab.visibility = View.VISIBLE
                     true
                 }
 
                 else -> false
             }
         }
+
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val states = adapter.getCheckboxStates().toMutableList()
+        memoViewModel.updateCheckboxStates(states)  // Checkbox check상태 확인
+        memoViewModel.setCheckboxVisibility(adapter.showCheckBoxes)     // checkbox 보이기/숨기기 확인
+        // BottomAppbar 상태 유지
+        outState.putBoolean(
+            "BOTTOM_APPBAR_VISIBLE",
+            binding.bottomAppbar.visibility == View.VISIBLE
+        )
+    }
+
+    private fun toggleFabVisibility() {
+        if (binding.fab.visibility == View.GONE) {
+            binding.fab.visibility = View.VISIBLE
+        } else {
+            binding.fab.visibility = View.GONE
+        }
+    }
+
+    // BottomAppBar View 관리
+    private fun toggleBottomAppBarVisibility() {
+        adapter.setOnCheckboxChangedListener(object : MemoListAdapter.OnCheckboxChangedListener {
+            override fun onCheckboxChanged(selectedCount: Int) {
+                // 선택된 항목이 0보다 많을 경우에만 bottomAppBar 보이게 하기
+                if (selectedCount > 0) {
+                    binding.bottomAppbar.visibility = View.VISIBLE
+                } else {
+                    binding.bottomAppbar.visibility = View.GONE
+                }
+            }
+        })
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -132,7 +182,7 @@ class MainActivity : AppCompatActivity() {
             // 편집 버튼 눌렀을 시
             R.id.editIcon -> {
                 adapter.showCheckboxes()
-                toggleBottomAppBarVisibility()
+                toggleFabVisibility()
                 true
             }
 
@@ -140,14 +190,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // BottomAppBar View 관리
-    private fun toggleBottomAppBarVisibility() {
-        if (binding.bottomAppbar.visibility == View.GONE) {
-            binding.bottomAppbar.visibility = View.VISIBLE
-        } else {
-            binding.bottomAppbar.visibility = View.GONE
-        }
-    }
 
     override fun onDestroy() {
         super.onDestroy()

@@ -1,6 +1,7 @@
 package eu.tutorials.mymemo
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -11,6 +12,8 @@ import kotlinx.coroutines.launch
 class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
 
     val memoList: LiveData<List<Memo>> = repository.memoList
+    val checkboxStates = MutableLiveData<MutableList<Boolean>>()
+    val isCheckboxVisible = MutableLiveData<Boolean>().apply { value = false }  // 체크박스 보이기/숨기기 상태
 
     fun insert(memo: Memo) = viewModelScope.launch {    // insert 구현이 UI에서 캡슐화된다.
         repository.insert(memo)
@@ -18,6 +21,16 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
 
     fun delete(memo: List<Memo>) = viewModelScope.launch {
         repository.delete(memo)
+    }
+
+    // checkbox check 상태 유지
+    fun updateCheckboxStates(states: MutableList<Boolean>) {
+        checkboxStates.value = states
+    }
+
+    // checkbox 보이기 / 숨기기 유지
+    fun setCheckboxVisibility(visible: Boolean) {
+        isCheckboxVisible.value = visible
     }
 }
 

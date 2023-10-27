@@ -3,9 +3,10 @@
   - [x] SearchView
   - [ ] 폴더 추가
   - 삭제 기능
-    - [ ] CheckBox가 1개 이상 체크됐을 시에만 BottomAppBar 보이게 하기
+    - [x] CheckBox가 1개 이상 체크됐을 시에만 BottomAppBar 보이게 하기
     - [x] 삭제한 뒤에는 BottomAppBar 숨김
     - [x] 편집 버튼 눌렀을 시 checkBox 나오게 하기
+    - [ ] 전체 선택 / 전체 해제 기능
   - [ ] 보이는 방식 ex) 2격자 3격자
 - 삭제 기능
   - [x] LongClick 시 checkBox 나오게 하기
