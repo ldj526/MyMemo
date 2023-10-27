@@ -33,16 +33,21 @@ class MainActivity : AppCompatActivity() {
     }
     private lateinit var launcher: ActivityResultLauncher<Intent>
     private val adapter = MemoListAdapter()
+    private var searchIcon: MenuItem? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 화면 회전 시 BottomAppBar 유지시키기 위함
         savedInstanceState?.let {
+            // 화면 회전 시 BottomAppBar 유지시키기 위함
             val isBottomAppBarVisible = it.getBoolean("BOTTOM_APPBAR_VISIBLE")
             binding.bottomAppbar.visibility = if (isBottomAppBarVisible) View.VISIBLE else View.GONE
+            // 화면 회전 시 Floating action button 유지시키기 위함
+            val isFabVisible = it.getBoolean("FAB_VISIBLE")
+            binding.fab.visibility = if (isFabVisible) View.GONE else View.VISIBLE
         }
 
         setSupportActionBar(binding.toolBar)
@@ -65,11 +70,15 @@ class MainActivity : AppCompatActivity() {
         // checkbox 보이기 / 숨기기
         memoViewModel.isCheckboxVisible.observe(this, Observer { isVisible ->
             adapter.setCheckboxVisibility(isVisible)
+
+            searchIcon?.isVisible = !isVisible
         })
 
         adapter.onItemLongClicked = {
             toggleBottomAppBarVisibility()
             toggleFabVisibility()
+            memoViewModel.resetCheckboxStates()
+            searchIcon?.isVisible = false
         }
 
         launcher =
@@ -110,6 +119,7 @@ class MainActivity : AppCompatActivity() {
                     adapter.showCheckboxes()
                     binding.bottomAppbar.visibility = View.GONE
                     binding.fab.visibility = View.VISIBLE
+                    searchIcon?.isVisible = true
                     true
                 }
 
@@ -129,13 +139,18 @@ class MainActivity : AppCompatActivity() {
             "BOTTOM_APPBAR_VISIBLE",
             binding.bottomAppbar.visibility == View.VISIBLE
         )
+        // Floating action button 상태 유지
+        outState.putBoolean("FAB_VISIBLE", binding.fab.visibility == View.GONE)
     }
 
+    // Floating action button view 관리
     private fun toggleFabVisibility() {
         if (binding.fab.visibility == View.GONE) {
             binding.fab.visibility = View.VISIBLE
+            searchIcon?.isVisible = true
         } else {
             binding.fab.visibility = View.GONE
+            searchIcon?.isVisible = false
         }
     }
 
@@ -156,8 +171,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.search_menu, menu)
 
-        val searchItem = menu?.findItem(R.id.searchIcon)
-        val searchView = searchItem?.actionView as SearchView
+        searchIcon = menu?.findItem(R.id.searchIcon)
+        val searchView = searchIcon?.actionView as SearchView
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             // 검색 버튼 입력 시 호출
@@ -181,6 +196,7 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             // 편집 버튼 눌렀을 시
             R.id.editIcon -> {
+                memoViewModel.resetCheckboxStates()
                 adapter.showCheckboxes()
                 toggleFabVisibility()
                 true
@@ -189,7 +205,6 @@ class MainActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
-
 
     override fun onDestroy() {
         super.onDestroy()

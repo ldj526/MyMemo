@@ -32,6 +32,12 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
     fun setCheckboxVisibility(visible: Boolean) {
         isCheckboxVisible.value = visible
     }
+
+    // checkbox 초기화
+    fun resetCheckboxStates() {
+        val resetStates = MutableList(memoList.value?.size ?: 0) { false }
+        checkboxStates.value = resetStates
+    }
 }
 
 class MemoViewModelFactory(private val repository: MemoRepository) : ViewModelProvider.Factory {
