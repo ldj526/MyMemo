@@ -15,6 +15,10 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
     fun insert(memo: Memo) = viewModelScope.launch {    // insert 구현이 UI에서 캡슐화된다.
         repository.insert(memo)
     }
+
+    fun delete(memo: List<Memo>) = viewModelScope.launch {
+        repository.delete(memo)
+    }
 }
 
 class MemoViewModelFactory(private val repository: MemoRepository) : ViewModelProvider.Factory {

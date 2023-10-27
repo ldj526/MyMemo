@@ -16,7 +16,7 @@ interface MemoDao {
     suspend fun update(memo: Memo)
 
     @Delete
-    suspend fun delete(memo: Memo)
+    suspend fun delete(memo: List<Memo>)
 
     @Query("DELETE FROM memo_table")
     suspend fun deleteAll()

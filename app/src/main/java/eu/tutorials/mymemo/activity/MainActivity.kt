@@ -5,6 +5,8 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -16,14 +18,19 @@ import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.google.android.material.bottomappbar.BottomAppBar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import eu.tutorials.mymemo.MemoViewModel
 import eu.tutorials.mymemo.MemoViewModelFactory
 import eu.tutorials.mymemo.MemosApplication
 import eu.tutorials.mymemo.R
+import eu.tutorials.mymemo.databinding.ActivityMainBinding
 import eu.tutorials.mymemo.model.Memo
 
 class MainActivity : AppCompatActivity() {
+
+    private var _binding: ActivityMainBinding? = null
+    private val binding get() = _binding!!
 
     private val memoViewModel: MemoViewModel by viewModels() {
         MemoViewModelFactory((application as MemosApplication).repository)
@@ -33,13 +40,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        _binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        val toolbar = findViewById<Toolbar>(R.id.toolBar)
-        setSupportActionBar(toolbar)
-        val recyclerView = findViewById<RecyclerView>(R.id.recyclerview)
-        recyclerView.adapter = adapter
-        recyclerView.layoutManager = StaggeredGridLayoutManager(2, LinearLayout.VERTICAL)
+        setSupportActionBar(binding.toolBar)
+        binding.recyclerview.adapter = adapter
+        binding.recyclerview.layoutManager = StaggeredGridLayoutManager(2, LinearLayout.VERTICAL)
 
         // getAlphabetizedWords에 의해 반환된 LiveData에 관찰자를 추가합니다.
         // onChanged() 메서드는 관찰되는 데이터가 변경되고 액티비티가
@@ -48,6 +54,10 @@ class MainActivity : AppCompatActivity() {
             // 어댑터 내의 단어들의 캐시된 복사본을 업데이트합니다.
             memos?.let { adapter.setMemo(it) }
         })
+
+        adapter.onItemLongClicked = {
+            toggleBottomAppBarVisibility()
+        }
 
         launcher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -72,11 +82,24 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-
-        val fab = findViewById<FloatingActionButton>(R.id.fab)
-        fab.setOnClickListener {
+        binding.fab.setOnClickListener {
             val intent = Intent(this@MainActivity, NewMemoActivity::class.java)
             launcher.launch(intent)
+        }
+        binding.bottomAppbar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                // BottomAppBar에서 Delete를 눌렀을 때
+                R.id.deleteIcon -> {
+                    val selectedItems = adapter.getSelectedItems() // 선택된 항목들 가져오기
+                    memoViewModel.delete(selectedItems) // ViewModel에서 삭제 로직 호출
+                    adapter.notifyDataSetChanged() // Adapter에 데이터 변경 알림
+                    adapter.showCheckboxes()
+                    toggleBottomAppBarVisibility()
+                    true
+                }
+
+                else -> false
+            }
         }
     }
 
@@ -100,7 +123,34 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
         })
-
         return true
+    }
+
+    // Menu 에서 선택했을 때
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            // 편집 버튼 눌렀을 시
+            R.id.editIcon -> {
+                adapter.showCheckboxes()
+                toggleBottomAppBarVisibility()
+                true
+            }
+
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    // BottomAppBar View 관리
+    private fun toggleBottomAppBarVisibility() {
+        if (binding.bottomAppbar.visibility == View.GONE) {
+            binding.bottomAppbar.visibility = View.VISIBLE
+        } else {
+            binding.bottomAppbar.visibility = View.GONE
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
     }
 }

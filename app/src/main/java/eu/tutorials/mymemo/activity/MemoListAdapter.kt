@@ -1,5 +1,6 @@
 package eu.tutorials.mymemo.activity
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +16,7 @@ class MemoListAdapter :
     private var memoList = ArrayList<Memo>()
     private var fullList = ArrayList<Memo>()
     private var showCheckBoxes = false
+    var onItemLongClicked: (() -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MemoViewHolder {
         return MemoViewHolder(
@@ -44,14 +46,19 @@ class MemoListAdapter :
             checkBox.isChecked = memo.isChecked
             checkBox.visibility =
                 if (showCheckBoxes) View.VISIBLE else View.GONE
+            // Checkbox 상태 변화 check
+            checkBox.setOnCheckedChangeListener { _, isChecked ->
+                memo.isChecked = isChecked
+            }
             itemView.setOnLongClickListener {
-                showCheckBoxes = !showCheckBoxes
-                notifyDataSetChanged()
+                onItemLongClicked?.invoke()
+                showCheckboxes()
                 true
             }
         }
     }
 
+    // 검색할 때 filter하는 함수
     fun filterList(search: String) {
         memoList.clear()
         for (item in fullList) {
@@ -73,7 +80,16 @@ class MemoListAdapter :
         notifyDataSetChanged()
     }
 
+    // checkbox 보여주는 기능
+    fun showCheckboxes() {
+        showCheckBoxes = !showCheckBoxes
+        notifyDataSetChanged()
+    }
+
+    // check 된 항목들을 return 해줌
+    fun getSelectedItems(): List<Memo> {
+        return memoList.filter { it.isChecked }
+    }
+
     override fun getItemCount(): Int = memoList.size
-
-
 }

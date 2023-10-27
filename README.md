@@ -2,11 +2,15 @@
 - 툴바 활용하여 메뉴 만들기
   - [x] SearchView
   - [ ] 폴더 추가
-  - [ ] 삭제 기능
+  - 삭제 기능
+    - [ ] CheckBox가 1개 이상 체크됐을 시에만 BottomAppBar 보이게 하기
+    - [x] 삭제한 뒤에는 BottomAppBar 숨김
+    - [x] 편집 버튼 눌렀을 시 checkBox 나오게 하기
   - [ ] 보이는 방식 ex) 2격자 3격자
 - 삭제 기능
   - [x] LongClick 시 checkBox 나오게 하기
-  - [ ] checkBox 선택된 항목 삭제하는 기능
+  - [x] checkBox 선택된 항목 삭제하는 기능
+  - [x] 삭제한 후에는 checkBox 숨김
 - 수정 기능
   - [ ] 쓰여진 메모 들어갔을 때 바로 수정화면으로 들어가는 기능
 - 입력 화면
