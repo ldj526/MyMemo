@@ -1,27 +1,22 @@
 package eu.tutorials.mymemo.activity
 
-import android.app.Activity
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.LinearLayout
-import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import eu.tutorials.mymemo.MemoViewModel
 import eu.tutorials.mymemo.MemoViewModelFactory
 import eu.tutorials.mymemo.MemosApplication
 import eu.tutorials.mymemo.R
 import eu.tutorials.mymemo.databinding.ActivityMainBinding
-import eu.tutorials.mymemo.model.Memo
 
 class MainActivity : AppCompatActivity() {
 
@@ -31,7 +26,6 @@ class MainActivity : AppCompatActivity() {
     private val memoViewModel: MemoViewModel by viewModels() {
         MemoViewModelFactory((application as MemosApplication).repository)
     }
-    private lateinit var launcher: ActivityResultLauncher<Intent>
     private val adapter = MemoListAdapter()
     private var searchIcon: MenuItem? = null
 
@@ -52,7 +46,7 @@ class MainActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.toolBar)
         binding.recyclerview.adapter = adapter
-        binding.recyclerview.layoutManager = StaggeredGridLayoutManager(2, LinearLayout.VERTICAL)
+        binding.recyclerview.layoutManager = GridLayoutManager(this, 2)
 
         // getAlphabetizedWords에 의해 반환된 LiveData에 관찰자를 추가합니다.
         // onChanged() 메서드는 관찰되는 데이터가 변경되고 액티비티가
@@ -76,7 +70,7 @@ class MainActivity : AppCompatActivity() {
 
         // 격자로 보는 방식 관찰
         memoViewModel.spanCount.observe(this, Observer { spanCount ->
-            val layoutManager = binding.recyclerview.layoutManager as? StaggeredGridLayoutManager
+            val layoutManager = binding.recyclerview.layoutManager as? GridLayoutManager
             layoutManager?.spanCount = spanCount
         })
 
@@ -87,32 +81,9 @@ class MainActivity : AppCompatActivity() {
             searchIcon?.isVisible = false
         }
 
-        launcher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == Activity.RESULT_OK) {
-                    val memo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        result.data?.getSerializableExtra(
-                            NewMemoActivity.EXTRA_REPLY,
-                            Memo::class.java
-                        )
-                    } else {
-                        result.data?.getSerializableExtra(NewMemoActivity.EXTRA_REPLY) as Memo?
-                    }
-                    if (memo != null) {
-                        memoViewModel.insert(memo)
-                    }
-                } else {
-                    Toast.makeText(
-                        applicationContext,
-                        R.string.empty_not_saved,
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-
         binding.fab.setOnClickListener {
             val intent = Intent(this@MainActivity, NewMemoActivity::class.java)
-            launcher.launch(intent)
+            startActivity(intent)
         }
 
         binding.bottomAppbar.setOnMenuItemClickListener { menuItem ->
@@ -226,7 +197,7 @@ class MainActivity : AppCompatActivity() {
 
     // gridLayout에서 spanCount 변경
     private fun changeSpanCount(spanCount: Int) {
-        val layoutManager = binding.recyclerview.layoutManager as? StaggeredGridLayoutManager
+        val layoutManager = binding.recyclerview.layoutManager as? GridLayoutManager
         layoutManager?.spanCount = spanCount
         adapter.notifyDataSetChanged()
         memoViewModel.spanCount.value = spanCount

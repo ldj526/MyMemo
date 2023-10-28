@@ -24,6 +24,10 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
         repository.delete(memo)
     }
 
+    fun update(memo: Memo) = viewModelScope.launch {
+        repository.update(memo)
+    }
+
     // checkbox check 상태 유지
     fun updateCheckboxStates(states: MutableList<Boolean>) {
         checkboxStates.value = states

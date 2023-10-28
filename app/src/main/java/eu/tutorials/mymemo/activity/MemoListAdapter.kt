@@ -1,5 +1,6 @@
 package eu.tutorials.mymemo.activity
 
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -40,11 +41,13 @@ class MemoListAdapter :
     inner class MemoViewHolder(itemView: View) :
         RecyclerView.ViewHolder(itemView) {
 
+        val id: TextView = itemView.findViewById(R.id.id)
         val checkBox: CheckBox = itemView.findViewById(R.id.checkBox)
         val title: TextView = itemView.findViewById(R.id.tv_title)
         val content: TextView = itemView.findViewById(R.id.tv_content)
 
         fun bind(memo: Memo) {
+            id.text = memo.id.toString()
             title.text = memo.title
             content.text = memo.content
             checkBox.isChecked = memo.isChecked
@@ -56,6 +59,11 @@ class MemoListAdapter :
                 // checkbox에 check된 개수
                 val selectedCount = memoList.count { it.isChecked }
                 checkboxChangedListener?.onCheckboxChanged(selectedCount)
+            }
+            itemView.setOnClickListener {
+                val intent = Intent(it.context, EditMemoActivity::class.java)
+                intent.putExtra("currentMemo", memo)
+                it.context.startActivity(intent)
             }
             itemView.setOnLongClickListener {
                 onItemLongClicked?.invoke()

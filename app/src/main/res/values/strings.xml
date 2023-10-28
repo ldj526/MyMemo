@@ -3,6 +3,7 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hint_word">Memo...</string>
     <string name="button_save">Save</string>
+    <string name="button_update">Update</string>
     <string name="empty_not_saved">Memo not saved because it is empty.</string>
     <string name="add_word">Add word</string>
 
