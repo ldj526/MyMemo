@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -48,7 +49,7 @@ class EditMemoActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "불러오기 실패", Toast.LENGTH_LONG).show()
         }
-        val btnUpdate: Button = findViewById(R.id.btn_update)
+        val btnUpdate: ImageView = findViewById(R.id.btn_update)
 
         btnUpdate.setOnClickListener {
             val title = updateTitle.text.toString()

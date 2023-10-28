@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -28,7 +29,7 @@ class NewMemoActivity : AppCompatActivity() {
         editTitle = findViewById(R.id.et_title)
         editContent = findViewById(R.id.et_content)
 
-        val button = findViewById<Button>(R.id.btn_save)
+        val button = findViewById<ImageView>(R.id.btn_save)
         button.setOnClickListener {
             val title = editTitle.text.toString()
             val content = editContent.text.toString()
