@@ -16,6 +16,8 @@ data class Memo(
     val title: String?,
     @ColumnInfo(name = "content")  // 테이블의 열 이름
     val content: String?,
+    @ColumnInfo(name = "date")
+    val date: Long?,
     @ColumnInfo(name = "check")
     var isChecked: Boolean = false
 ) : Parcelable

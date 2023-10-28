@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import eu.tutorials.mymemo.R
 import eu.tutorials.mymemo.model.Memo
+import eu.tutorials.mymemo.utils.convertTimestampToDate
 
 class MemoListAdapter :
     RecyclerView.Adapter<MemoListAdapter.MemoViewHolder>() {
@@ -45,11 +46,13 @@ class MemoListAdapter :
         val checkBox: CheckBox = itemView.findViewById(R.id.checkBox)
         val title: TextView = itemView.findViewById(R.id.tv_title)
         val content: TextView = itemView.findViewById(R.id.tv_content)
+        val date: TextView = itemView.findViewById(R.id.date)
 
         fun bind(memo: Memo) {
             id.text = memo.id.toString()
             title.text = memo.title
             content.text = memo.content
+            date.text = convertTimestampToDate(memo.date!!)
             checkBox.isChecked = memo.isChecked
             checkBox.visibility =
                 if (showCheckBoxes) View.VISIBLE else View.GONE
@@ -85,7 +88,7 @@ class MemoListAdapter :
     }
 
     // checkbox check 상태 확인
-    fun updateCheckboxStates(states: MutableList<Boolean>){
+    fun updateCheckboxStates(states: MutableList<Boolean>) {
         for (i in memoList.indices) {
             memoList[i].isChecked = states[i]
         }

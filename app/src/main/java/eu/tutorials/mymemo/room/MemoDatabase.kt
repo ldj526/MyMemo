@@ -9,7 +9,7 @@ import eu.tutorials.mymemo.model.Memo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-@Database(entities = [Memo::class], version = 2, exportSchema = false)
+@Database(entities = [Memo::class], version = 1, exportSchema = false)
 abstract class MemoDatabase : RoomDatabase() {
     abstract fun memoDao(): MemoDao
 

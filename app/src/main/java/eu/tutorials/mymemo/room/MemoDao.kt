@@ -6,7 +6,7 @@ import eu.tutorials.mymemo.model.Memo
 
 @Dao
 interface MemoDao {
-    @Query("SELECT * FROM memo_table")
+    @Query("SELECT * FROM memo_table ORDER BY date DESC")
     fun getAll(): LiveData<List<Memo>>
 
     @Insert

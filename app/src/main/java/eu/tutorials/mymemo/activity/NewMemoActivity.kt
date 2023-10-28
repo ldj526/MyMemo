@@ -2,7 +2,7 @@ package eu.tutorials.mymemo.activity
 
 import android.os.Bundle
 import android.text.TextUtils
-import android.widget.Button
+import android.util.Log
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
@@ -36,7 +36,9 @@ class NewMemoActivity : AppCompatActivity() {
             if (TextUtils.isEmpty(title) || TextUtils.isEmpty(content)) {
                 Toast.makeText(applicationContext, "제목과 내용을 입력해주세요.", Toast.LENGTH_LONG).show()
             } else {
-                val memo = Memo(null, title, content, false)
+                val timeStamp = System.currentTimeMillis()
+                val memo = Memo(null, title, content, timeStamp, false)
+                Log.d("Check", "$timeStamp")
                 memoViewModel.insert(memo)
                 finish()
             }
