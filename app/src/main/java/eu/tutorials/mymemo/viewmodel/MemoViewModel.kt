@@ -14,6 +14,7 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
     val memoList: LiveData<List<Memo>> = repository.memoList
     val checkboxStates = MutableLiveData<MutableList<Boolean>>()
     val isCheckboxVisible = MutableLiveData<Boolean>().apply { value = false }  // 체크박스 보이기/숨기기 상태
+    val spanCount = MutableLiveData(2)
 
     fun insert(memo: Memo) = viewModelScope.launch {    // insert 구현이 UI에서 캡슐화된다.
         repository.insert(memo)

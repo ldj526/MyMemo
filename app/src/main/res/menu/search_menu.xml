@@ -11,4 +11,21 @@
     <item
         android:id="@+id/editIcon"
         android:title="편집" />
+
+    <item
+        android:id="@+id/view"
+        android:title="보기 방식">
+
+        <menu>
+            <item
+                android:id="@+id/twoGrid"
+                android:title="2격자"/>
+            <item
+                android:id="@+id/threeGrid"
+                android:title="3격자"/>
+            <item
+                android:id="@+id/fourGrid"
+                android:title="4격자"/>
+        </menu>
+    </item>
 </menu>

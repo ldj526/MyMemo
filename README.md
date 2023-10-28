@@ -7,7 +7,7 @@
     - [x] 삭제한 뒤에는 BottomAppBar 숨김
     - [x] 편집 버튼 눌렀을 시 checkBox 나오게 하기
     - [ ] 전체 선택 / 전체 해제 기능
-  - [ ] 보이는 방식 ex) 2격자 3격자
+  - [x] 보이는 방식 ex) 2격자 3격자
 - 삭제 기능
   - [x] LongClick 시 checkBox 나오게 하기
   - [x] checkBox 선택된 항목 삭제하는 기능

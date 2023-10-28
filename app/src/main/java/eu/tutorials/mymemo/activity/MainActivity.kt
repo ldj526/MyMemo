@@ -62,16 +62,22 @@ class MainActivity : AppCompatActivity() {
             memos?.let { adapter.setMemo(it) }
         })
 
-        // checkbox check 상태
+        // checkbox check 상태 관찰
         memoViewModel.checkboxStates.observe(this, Observer { states ->
             adapter.updateCheckboxStates(states)
         })
 
-        // checkbox 보이기 / 숨기기
+        // checkbox 보이기 / 숨기기 관찰
         memoViewModel.isCheckboxVisible.observe(this, Observer { isVisible ->
             adapter.setCheckboxVisibility(isVisible)
 
             searchIcon?.isVisible = !isVisible
+        })
+
+        // 격자로 보는 방식 관찰
+        memoViewModel.spanCount.observe(this, Observer { spanCount ->
+            val layoutManager = binding.recyclerview.layoutManager as? StaggeredGridLayoutManager
+            layoutManager?.spanCount = spanCount
         })
 
         adapter.onItemLongClicked = {
@@ -201,9 +207,29 @@ class MainActivity : AppCompatActivity() {
                 toggleFabVisibility()
                 true
             }
+            R.id.twoGrid -> {
+                changeSpanCount(2)
+                true
+            }
+            R.id.threeGrid -> {
+                changeSpanCount(3)
+                true
+            }
+            R.id.fourGrid -> {
+                changeSpanCount(4)
+                true
+            }
 
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    // gridLayout에서 spanCount 변경
+    private fun changeSpanCount(spanCount: Int) {
+        val layoutManager = binding.recyclerview.layoutManager as? StaggeredGridLayoutManager
+        layoutManager?.spanCount = spanCount
+        adapter.notifyDataSetChanged()
+        memoViewModel.spanCount.value = spanCount
     }
 
     override fun onDestroy() {
