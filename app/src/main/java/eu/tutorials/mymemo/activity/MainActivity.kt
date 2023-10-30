@@ -5,19 +5,21 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.GravityCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.material.navigation.NavigationView
 import eu.tutorials.mymemo.MemoViewModel
 import eu.tutorials.mymemo.MemoViewModelFactory
 import eu.tutorials.mymemo.MemosApplication
 import eu.tutorials.mymemo.R
 import eu.tutorials.mymemo.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     private var _binding: ActivityMainBinding? = null
     private val binding get() = _binding!!
@@ -43,14 +45,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         setSupportActionBar(binding.toolBar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu)
         supportActionBar?.setDisplayShowTitleEnabled(false) // toolbar의 title 제거
+        binding.navigationView.setNavigationItemSelectedListener(this)
         binding.recyclerview.adapter = adapter
         binding.recyclerview.layoutManager = GridLayoutManager(this, 2)
-
-        // drawerLayout 왼쪽에서 열기
-        binding.drawerMenu.setOnClickListener {
-            binding.drawerLayout.openDrawer(GravityCompat.START)
-        }
 
         // getAlphabetizedWords에 의해 반환된 LiveData에 관찰자를 추가합니다.
         // onChanged() 메서드는 관찰되는 데이터가 변경되고 액티비티가
@@ -172,34 +172,42 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.folder -> Toast.makeText(this, "제목과 내용을 입력해주세요.", Toast.LENGTH_LONG).show()
+
+        }
+        return false
+    }
+
     // Menu 에서 선택했을 때
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
+        when (item.itemId) {
             // 편집 버튼 눌렀을 시
             R.id.editIcon -> {
                 memoViewModel.resetCheckboxStates()
                 adapter.showCheckboxes()
                 toggleFabVisibility()
-                true
             }
 
             R.id.twoGrid -> {
                 changeSpanCount(2)
-                true
             }
 
             R.id.threeGrid -> {
                 changeSpanCount(3)
-                true
             }
 
             R.id.fourGrid -> {
                 changeSpanCount(4)
-                true
             }
 
-            else -> super.onOptionsItemSelected(item)
+            android.R.id.home -> {
+                binding.drawerLayout.openDrawer(GravityCompat.START)
+            }
+
         }
+        return super.onOptionsItemSelected(item)
     }
 
     // gridLayout에서 spanCount 변경
@@ -212,7 +220,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            binding.drawerLayout.closeDrawers()
         } else {
             super.onBackPressed()
         }
