@@ -5,13 +5,12 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.LinearLayout
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.GravityCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import eu.tutorials.mymemo.MemoViewModel
 import eu.tutorials.mymemo.MemoViewModelFactory
 import eu.tutorials.mymemo.MemosApplication
@@ -29,7 +28,6 @@ class MainActivity : AppCompatActivity() {
     private val adapter = MemoListAdapter()
     private var searchIcon: MenuItem? = null
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
@@ -45,8 +43,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         setSupportActionBar(binding.toolBar)
+        supportActionBar?.setDisplayShowTitleEnabled(false) // toolbar의 title 제거
         binding.recyclerview.adapter = adapter
         binding.recyclerview.layoutManager = GridLayoutManager(this, 2)
+
+        // drawerLayout 왼쪽에서 열기
+        binding.drawerMenu.setOnClickListener {
+            binding.drawerLayout.openDrawer(GravityCompat.START)
+        }
 
         // getAlphabetizedWords에 의해 반환된 LiveData에 관찰자를 추가합니다.
         // onChanged() 메서드는 관찰되는 데이터가 변경되고 액티비티가
@@ -178,14 +182,17 @@ class MainActivity : AppCompatActivity() {
                 toggleFabVisibility()
                 true
             }
+
             R.id.twoGrid -> {
                 changeSpanCount(2)
                 true
             }
+
             R.id.threeGrid -> {
                 changeSpanCount(3)
                 true
             }
+
             R.id.fourGrid -> {
                 changeSpanCount(4)
                 true
@@ -201,6 +208,14 @@ class MainActivity : AppCompatActivity() {
         layoutManager?.spanCount = spanCount
         adapter.notifyDataSetChanged()
         memoViewModel.spanCount.value = spanCount
+    }
+
+    override fun onBackPressed() {
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+        } else {
+            super.onBackPressed()
+        }
     }
 
     override fun onDestroy() {
