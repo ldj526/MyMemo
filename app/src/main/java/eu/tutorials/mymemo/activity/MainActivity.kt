@@ -2,10 +2,12 @@ package eu.tutorials.mymemo.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
@@ -30,10 +32,20 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val adapter = MemoListAdapter()
     private var searchIcon: MenuItem? = null
 
+    private val callback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {    // 뒤로가기 클릭 시
+            if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                binding.drawerLayout.closeDrawers()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        this.onBackPressedDispatcher.addCallback(this, callback)    // 뒤로가기 클릭 시
 
         savedInstanceState?.let {
             // 화면 회전 시 BottomAppBar 유지시키기 위함
@@ -49,6 +61,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu)
         supportActionBar?.setDisplayShowTitleEnabled(false) // toolbar의 title 제거
         binding.navigationView.setNavigationItemSelectedListener(this)
+        initFolderList()
         binding.recyclerview.adapter = adapter
         binding.recyclerview.layoutManager = GridLayoutManager(this, 2)
 
@@ -108,6 +121,25 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
+    }
+
+    private fun initFolderList() {
+        val parentList = mutableListOf<String>(
+            "카테고리1", "카테고리2", "카테고리3"
+        )
+        val childList = mutableListOf(
+            mutableListOf("차일드1", "차일드2", "차일드3"),
+            mutableListOf("차일드1"),
+            mutableListOf("차일드2")
+        )
+        val folderListAdapter = FolderListAdapter(this, parentList, childList)
+        binding.expandableListView.setAdapter(folderListAdapter)
+        binding.expandableListView.setOnGroupClickListener { parent, v, groupPosition, id ->
+            false
+        }
+        binding.expandableListView.setOnChildClickListener { parent, v, groupPosition, childPosition, id ->
+            false
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -216,14 +248,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         layoutManager?.spanCount = spanCount
         adapter.notifyDataSetChanged()
         memoViewModel.spanCount.value = spanCount
-    }
-
-    override fun onBackPressed() {
-        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            binding.drawerLayout.closeDrawers()
-        } else {
-            super.onBackPressed()
-        }
     }
 
     override fun onDestroy() {
