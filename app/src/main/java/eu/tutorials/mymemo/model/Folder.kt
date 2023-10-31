@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class Folder (
     @PrimaryKey(autoGenerate = true)
     val id: Int?,
-    val name: String?
+    val name: String?,
+    val parentInt: Int? = null
 )

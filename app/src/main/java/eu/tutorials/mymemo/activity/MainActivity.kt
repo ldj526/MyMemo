@@ -6,9 +6,11 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.GravityCompat
@@ -20,6 +22,9 @@ import eu.tutorials.mymemo.MemoViewModelFactory
 import eu.tutorials.mymemo.MemosApplication
 import eu.tutorials.mymemo.R
 import eu.tutorials.mymemo.databinding.ActivityMainBinding
+import eu.tutorials.mymemo.model.Folder
+import eu.tutorials.mymemo.viewmodel.FolderViewModel
+import eu.tutorials.mymemo.viewmodel.FolderViewModelFactory
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
@@ -29,7 +34,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val memoViewModel: MemoViewModel by viewModels() {
         MemoViewModelFactory((application as MemosApplication).repository)
     }
+    private val folderViewModel: FolderViewModel by viewModels() {
+        FolderViewModelFactory((application as MemosApplication).folderRepository)
+    }
     private val adapter = MemoListAdapter()
+    private val folderAdapter = FolderListAdapter(this)
     private var searchIcon: MenuItem? = null
 
     private val callback = object : OnBackPressedCallback(true) {
@@ -61,9 +70,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu)
         supportActionBar?.setDisplayShowTitleEnabled(false) // toolbar의 title 제거
         binding.navigationView.setNavigationItemSelectedListener(this)
-        initFolderList()
+
         binding.recyclerview.adapter = adapter
         binding.recyclerview.layoutManager = GridLayoutManager(this, 2)
+
+        // folderlist 가져오기
+        folderViewModel.folderList.observe(this, Observer { folders ->
+            initFolderList(folders)
+        })
 
         // getAlphabetizedWords에 의해 반환된 LiveData에 관찰자를 추가합니다.
         // onChanged() 메서드는 관찰되는 데이터가 변경되고 액티비티가
@@ -120,20 +134,43 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 else -> false
             }
         }
+        binding.addFolder.setOnClickListener {
+            // 다이얼로그로 새 폴더 이름 입력 받기
+            val input = EditText(this)
+            val dialog = AlertDialog.Builder(this)
+                .setTitle("새 폴더 이름 입력")
+                .setView(input)
+                .setPositiveButton("추가") { dialog, _ ->
+                    val folderName = input.text.toString()
+                    if (folderName.isNotEmpty()) {
+                        // 새 폴더 데이터 추가
+                        val newFolder = Folder(null, folderName, null)
+                        // 여기에 데이터베이스 저장 로직 추가
+                        folderViewModel.insert(newFolder)
+                    }
+                    dialog.dismiss()
+                }
+                .setNegativeButton("취소") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .create()
+            dialog.show()
+        }
 
     }
 
-    private fun initFolderList() {
-        val parentList = mutableListOf<String>(
-            "카테고리1", "카테고리2", "카테고리3"
-        )
-        val childList = mutableListOf(
-            mutableListOf("차일드1", "차일드2", "차일드3"),
-            mutableListOf("차일드1"),
-            mutableListOf("차일드2")
-        )
-        val folderListAdapter = FolderListAdapter(this, parentList, childList)
-        binding.expandableListView.setAdapter(folderListAdapter)
+    private fun initFolderList(userFolders: List<Folder>) {
+        val parentList = mutableListOf(Folder(null, "폴더"))
+        val childList = mutableListOf<MutableList<Folder>>()
+
+        val children = mutableListOf<Folder>()
+        for (folder in userFolders) {
+            children.add(folder)
+        }
+        childList.add(children)
+
+        folderAdapter.setFolder(parentList, childList)
+        binding.expandableListView.setAdapter(folderAdapter)
         binding.expandableListView.setOnGroupClickListener { parent, v, groupPosition, id ->
             false
         }

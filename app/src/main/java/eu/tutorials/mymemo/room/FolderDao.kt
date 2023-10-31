@@ -17,4 +17,7 @@ interface FolderDao {
 
     @Delete
     suspend fun delete(folder: List<Folder>)
+
+    @Query("DELETE FROM folder_table")
+    suspend fun deleteAll()
 }
