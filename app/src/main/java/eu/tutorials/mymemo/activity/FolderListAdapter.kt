@@ -59,12 +59,15 @@ class FolderListAdapter(private val context: Context) : BaseExpandableListAdapte
         return true
     }
 
-    fun setFolder(parentFolders: MutableList<Folder>, childFolders: MutableList<MutableList<Folder>>) {
-        parentList.clear()
-        parentList.addAll(parentFolders)
-
-        childList.clear()
-        childList.addAll(childFolders)
+    fun setFolder(parentFolders: Folder, childFolders: List<Folder>) {
+        parentList.apply {
+            clear()
+            add(parentFolders)
+        }
+        childList.apply {
+            clear()
+            add(ArrayList(childFolders))
+        }
         notifyDataSetChanged()
     }
 }

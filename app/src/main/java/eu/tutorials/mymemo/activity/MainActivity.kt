@@ -71,12 +71,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         supportActionBar?.setDisplayShowTitleEnabled(false) // toolbar의 title 제거
         binding.navigationView.setNavigationItemSelectedListener(this)
 
+        binding.expandableListView.setAdapter(folderAdapter)
+
         binding.recyclerview.adapter = adapter
         binding.recyclerview.layoutManager = GridLayoutManager(this, 2)
 
         // folderlist 가져오기
         folderViewModel.folderList.observe(this, Observer { folders ->
-            initFolderList(folders)
+            folders?.let { folderAdapter.setFolder(Folder(null, "폴더", null), it) }
         })
 
         // getAlphabetizedWords에 의해 반환된 LiveData에 관찰자를 추가합니다.
@@ -157,26 +159,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             dialog.show()
         }
 
-    }
-
-    private fun initFolderList(userFolders: List<Folder>) {
-        val parentList = mutableListOf(Folder(null, "폴더"))
-        val childList = mutableListOf<MutableList<Folder>>()
-
-        val children = mutableListOf<Folder>()
-        for (folder in userFolders) {
-            children.add(folder)
-        }
-        childList.add(children)
-
-        folderAdapter.setFolder(parentList, childList)
-        binding.expandableListView.setAdapter(folderAdapter)
-        binding.expandableListView.setOnGroupClickListener { parent, v, groupPosition, id ->
-            false
-        }
-        binding.expandableListView.setOnChildClickListener { parent, v, groupPosition, childPosition, id ->
-            false
-        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
