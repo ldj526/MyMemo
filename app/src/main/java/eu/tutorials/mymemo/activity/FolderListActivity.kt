@@ -66,7 +66,8 @@ class FolderListActivity : AppCompatActivity() {
         })
 
         binding.editFolder.setOnClickListener {
-
+            folderAdapter.showCheckboxes()
+            toggleBottomAppBarVisibility()
         }
 
         binding.bottomAppbar.setOnMenuItemClickListener { menuItem ->
@@ -75,12 +76,29 @@ class FolderListActivity : AppCompatActivity() {
                     val selectedItems = folderAdapter.getSelectedItems() // 선택된 항목들 가져오기
                     folderViewModel.delete(selectedItems) // ViewModel에서 삭제 로직 호출
                     folderAdapter.notifyDataSetChanged() // Adapter에 데이터 변경 알림
+                    folderAdapter.showCheckboxes()
+                    binding.bottomAppbar.visibility = View.GONE
                     true
                 }
 
                 else -> false
             }
         }
+    }
+
+    // BottomAppBar View 관리
+    private fun toggleBottomAppBarVisibility() {
+        folderAdapter.setOnCheckboxChangedListener(object :
+            FolderListAdapter.OnCheckboxChangedListener {
+            override fun onCheckboxChanged(selectedCount: Int) {
+                // 선택된 항목이 0보다 많을 경우에만 bottomAppBar 보이게 하기
+                if (selectedCount > 0) {
+                    binding.bottomAppbar.visibility = View.VISIBLE
+                } else {
+                    binding.bottomAppbar.visibility = View.GONE
+                }
+            }
+        })
     }
 
     // Menu 에서 선택했을 때
