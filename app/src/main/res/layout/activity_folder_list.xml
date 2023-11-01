@@ -12,17 +12,9 @@
         android:layout_height="?attr/actionBarSize"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:menu="@menu/folder_toolbar_menu" >
 
-        <TextView
-            android:id="@+id/editFolder"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_marginEnd="16dp"
-            android:text="편집"
-            android:foreground="?android:attr/selectableItemBackgroundBorderless"
-            android:textSize="16sp" />
     </androidx.appcompat.widget.Toolbar>
 
     <ExpandableListView

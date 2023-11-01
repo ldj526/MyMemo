@@ -1,6 +1,7 @@
 package eu.tutorials.mymemo.activity
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,10 +16,10 @@ class FolderListAdapter(private val context: Context) : BaseExpandableListAdapte
     private val parentList = mutableListOf<Folder>()
     private val childList = mutableListOf<MutableList<Folder>>()
     var showCheckBoxes = false
-    private var checkboxChangedListener: OnCheckboxChangedListener? = null
+    private var folderCheckboxChangedListener: OnFolderCheckboxChangedListener? = null
 
-    interface OnCheckboxChangedListener {
-        fun onCheckboxChanged(selectedCount: Int)
+    interface OnFolderCheckboxChangedListener {
+        fun onFolderCheckboxChanged(selectedCount: Int)
     }
 
     override fun getGroupCount() = parentList.size
@@ -65,8 +66,9 @@ class FolderListAdapter(private val context: Context) : BaseExpandableListAdapte
         checkBox.setOnCheckedChangeListener { _, isChecked ->
             childList[groupPosition][childPosition].isChecked = isChecked
             // checkbox에 check된 개수
-            val selectedCount = childList[0].count { it.isChecked }
-            checkboxChangedListener?.onCheckboxChanged(selectedCount)
+            val selectedCount = childList.flatten().count { it.isChecked }
+            Log.d("Check", "folderCount: $selectedCount")
+            folderCheckboxChangedListener?.onFolderCheckboxChanged(selectedCount)
         }
         childCategory.text = getChild(groupPosition, childPosition)
         return childView
@@ -76,13 +78,40 @@ class FolderListAdapter(private val context: Context) : BaseExpandableListAdapte
         return true
     }
 
-    fun setOnCheckboxChangedListener(listener: OnCheckboxChangedListener) {
-        this.checkboxChangedListener = listener
+    // checkbox 보이기/숨기기 상태
+    fun setCheckboxVisibility(isVisible: Boolean) {
+        showCheckBoxes = isVisible
+        notifyDataSetChanged()
+    }
+
+    // folderList의 상태를 함수화
+    fun getCheckboxStates(): List<Boolean> {
+        return childList[0].map { it.isChecked }
+    }
+
+    // checkbox check 상태 확인
+    fun updateCheckboxStates(states: MutableList<Boolean>) {
+        var stateIndex = 0
+        for (group in childList.indices) {
+            for (child in childList[group].indices) {
+                childList[group][child].isChecked = states[stateIndex]
+                stateIndex++
+            }
+        }
+        notifyDataSetChanged()
+    }
+
+    fun setOnCheckboxChangedListener(listener: OnFolderCheckboxChangedListener) {
+        this.folderCheckboxChangedListener = listener
     }
 
     // checkbox 보여주는 기능
     fun showCheckboxes() {
         showCheckBoxes = !showCheckBoxes
+        // checkbox가 보이지 않는다면 check된 checkbox의 수를 0으로 만든다.
+        if (!showCheckBoxes) {
+            folderCheckboxChangedListener?.onFolderCheckboxChanged(0)
+        }
         notifyDataSetChanged()
     }
 

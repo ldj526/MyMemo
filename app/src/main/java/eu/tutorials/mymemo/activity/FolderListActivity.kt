@@ -1,6 +1,8 @@
 package eu.tutorials.mymemo.activity
 
 import android.os.Bundle
+import android.util.Log
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
@@ -29,6 +31,12 @@ class FolderListActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         _binding = ActivityFolderListBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        savedInstanceState?.let {
+            // 화면 회전 시 BottomAppBar 유지시키기 위함
+            val isBottomAppBarVisible = it.getBoolean("BOTTOM_APPBAR_VISIBLE")
+            binding.bottomAppbar.visibility = if (isBottomAppBarVisible) View.VISIBLE else View.GONE
+        }
 
         setSupportActionBar(binding.folderListToolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -60,15 +68,20 @@ class FolderListActivity : AppCompatActivity() {
 
         binding.expandableListView.setAdapter(folderAdapter)
 
+        // checkbox check 상태 관찰
+        folderViewModel.checkboxStates.observe(this, Observer { states ->
+            folderAdapter.updateCheckboxStates(states)
+        })
+
+        // checkbox 보이기 / 숨기기 관찰
+        folderViewModel.isCheckboxVisible.observe(this, Observer { isVisible ->
+            folderAdapter.setCheckboxVisibility(isVisible)
+        })
+
         // folderlist 가져오기
         folderViewModel.folderList.observe(this, Observer { folders ->
             folders?.let { folderAdapter.setFolder(Folder(null, "폴더", null), it) }
         })
-
-        binding.editFolder.setOnClickListener {
-            folderAdapter.showCheckboxes()
-            toggleBottomAppBarVisibility()
-        }
 
         binding.bottomAppbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
@@ -86,11 +99,30 @@ class FolderListActivity : AppCompatActivity() {
         }
     }
 
+    // 메뉴와 layout 연결
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.folder_toolbar_menu, menu)
+        return true
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val states = folderAdapter.getCheckboxStates().toMutableList()
+        folderViewModel.updateCheckboxStates(states)  // Checkbox check상태 확인
+        folderViewModel.setCheckboxVisibility(folderAdapter.showCheckBoxes)     // checkbox 보이기/숨기기 확인
+        // BottomAppbar 상태 유지
+        outState.putBoolean(
+            "BOTTOM_APPBAR_VISIBLE",
+            binding.bottomAppbar.visibility == View.VISIBLE
+        )
+    }
+
     // BottomAppBar View 관리
     private fun toggleBottomAppBarVisibility() {
         folderAdapter.setOnCheckboxChangedListener(object :
-            FolderListAdapter.OnCheckboxChangedListener {
-            override fun onCheckboxChanged(selectedCount: Int) {
+            FolderListAdapter.OnFolderCheckboxChangedListener {
+            override fun onFolderCheckboxChanged(selectedCount: Int) {
+                Log.d("check", "Selected count: $selectedCount")
                 // 선택된 항목이 0보다 많을 경우에만 bottomAppBar 보이게 하기
                 if (selectedCount > 0) {
                     binding.bottomAppbar.visibility = View.VISIBLE
@@ -106,6 +138,12 @@ class FolderListActivity : AppCompatActivity() {
         when (item.itemId) {
             android.R.id.home -> {
                 finish()
+            }
+
+            R.id.editFolder -> {
+                folderViewModel.resetCheckboxStates()
+                folderAdapter.showCheckboxes()
+                toggleBottomAppBarVisibility()
             }
         }
         return super.onOptionsItemSelected(item)
