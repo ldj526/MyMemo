@@ -136,29 +136,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 else -> false
             }
         }
-        binding.addFolder.setOnClickListener {
-            // 다이얼로그로 새 폴더 이름 입력 받기
-            val input = EditText(this)
-            val dialog = AlertDialog.Builder(this)
-                .setTitle("새 폴더 이름 입력")
-                .setView(input)
-                .setPositiveButton("추가") { dialog, _ ->
-                    val folderName = input.text.toString()
-                    if (folderName.isNotEmpty()) {
-                        // 새 폴더 데이터 추가
-                        val newFolder = Folder(null, folderName, null)
-                        // 여기에 데이터베이스 저장 로직 추가
-                        folderViewModel.insert(newFolder)
-                    }
-                    dialog.dismiss()
-                }
-                .setNegativeButton("취소") { dialog, _ ->
-                    dialog.dismiss()
-                }
-                .create()
-            dialog.show()
+        binding.manageFolder.setOnClickListener {
+            val intent = Intent(this, FolderListActivity::class.java)
+            startActivity(intent)
         }
-
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -251,6 +232,29 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             R.id.fourGrid -> {
                 changeSpanCount(4)
+            }
+
+            R.id.addFolder -> {
+                // 다이얼로그로 새 폴더 이름 입력 받기
+                val input = EditText(this)
+                val dialog = AlertDialog.Builder(this)
+                    .setTitle("새 폴더 이름 입력")
+                    .setView(input)
+                    .setPositiveButton("추가") { dialog, _ ->
+                        val folderName = input.text.toString()
+                        if (folderName.isNotEmpty()) {
+                            // 새 폴더 데이터 추가
+                            val newFolder = Folder(null, folderName, null)
+                            // 여기에 데이터베이스 저장 로직 추가
+                            folderViewModel.insert(newFolder)
+                        }
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton("취소") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    .create()
+                dialog.show()
             }
 
             android.R.id.home -> {

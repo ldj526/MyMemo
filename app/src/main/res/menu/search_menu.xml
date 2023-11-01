@@ -13,6 +13,10 @@
         android:title="편집" />
 
     <item
+        android:id="@+id/addFolder"
+        android:title="폴더 추가" />
+
+    <item
         android:id="@+id/view"
         android:title="보기 방식">
 
