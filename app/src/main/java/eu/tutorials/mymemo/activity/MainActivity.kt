@@ -219,6 +219,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.editIcon -> {
                 memoViewModel.resetCheckboxStates()
                 adapter.showCheckboxes()
+                toggleBottomAppBarVisibility()
                 toggleFabVisibility()
             }
 

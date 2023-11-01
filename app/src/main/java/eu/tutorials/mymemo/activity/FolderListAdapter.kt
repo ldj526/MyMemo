@@ -1,13 +1,17 @@
 package eu.tutorials.mymemo.activity
 
 import android.content.Context
+import android.icu.text.CaseMap.Fold
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
+import android.widget.CheckBox
 import android.widget.TextView
 import eu.tutorials.mymemo.R
 import eu.tutorials.mymemo.model.Folder
+import eu.tutorials.mymemo.model.Memo
 
 class FolderListAdapter(private val context: Context) : BaseExpandableListAdapter() {
 
@@ -51,12 +55,21 @@ class FolderListAdapter(private val context: Context) : BaseExpandableListAdapte
         val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val childView = inflater.inflate(R.layout.drawer_child, parent, false)
         val childCategory = childView.findViewById<TextView>(R.id.folder1)
+        val checkBox = childView.findViewById<CheckBox>(R.id.checkBox)
+        checkBox.setOnCheckedChangeListener { _, isChecked ->
+            childList[groupPosition][childPosition].isChecked = isChecked
+        }
         childCategory.text = getChild(groupPosition, childPosition)
         return childView
     }
 
     override fun isChildSelectable(groupPosition: Int, childPosition: Int): Boolean {
         return true
+    }
+
+    // check 된 항목들을 return 해줌
+    fun getSelectedItems(): List<Folder> {
+        return childList[0].filter { it.isChecked }
     }
 
     fun setFolder(parentFolders: Folder, childFolders: List<Folder>) {

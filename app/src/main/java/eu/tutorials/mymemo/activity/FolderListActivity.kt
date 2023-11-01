@@ -2,6 +2,7 @@ package eu.tutorials.mymemo.activity
 
 import android.os.Bundle
 import android.view.MenuItem
+import android.view.View
 import android.widget.EditText
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -63,14 +64,28 @@ class FolderListActivity : AppCompatActivity() {
         folderViewModel.folderList.observe(this, Observer { folders ->
             folders?.let { folderAdapter.setFolder(Folder(null, "폴더", null), it) }
         })
+
+        binding.editFolder.setOnClickListener {
+
+        }
+
+        binding.bottomAppbar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.deleteIcon -> {
+                    val selectedItems = folderAdapter.getSelectedItems() // 선택된 항목들 가져오기
+                    folderViewModel.delete(selectedItems) // ViewModel에서 삭제 로직 호출
+                    folderAdapter.notifyDataSetChanged() // Adapter에 데이터 변경 알림
+                    true
+                }
+
+                else -> false
+            }
+        }
     }
 
     // Menu 에서 선택했을 때
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.editIcon -> {
-
-            }
             android.R.id.home -> {
                 finish()
             }

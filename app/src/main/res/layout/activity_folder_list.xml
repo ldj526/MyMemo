@@ -19,8 +19,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:layout_marginRight="16dp"
+            android:layout_marginEnd="16dp"
             android:text="편집"
+            android:foreground="?android:attr/selectableItemBackgroundBorderless"
             android:textSize="16sp" />
     </androidx.appcompat.widget.Toolbar>
 
@@ -40,6 +41,7 @@
         android:orientation="horizontal"
         android:layout_marginTop="10dp"
         android:gravity="center"
+        android:foreground="?android:attr/selectableItemBackgroundBorderless"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/expandableListView">
@@ -54,7 +56,27 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:text="폴더 추가"
-            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
             android:textSize="16sp" />
     </LinearLayout>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/coordinator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.bottomappbar.BottomAppBar
+            android:id="@+id/bottomAppbar"
+            style="@style/Widget.MaterialComponents.BottomAppBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:menu="@menu/bottom_app_bar_menu"
+            tools:visibility="visible" />
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
