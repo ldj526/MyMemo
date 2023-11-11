@@ -5,5 +5,11 @@
         android:id="@+id/deleteIcon"
         android:icon="@drawable/ic_delete"
         android:title="delete"
-        app:showAsAction="always"/>
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/moveMemo"
+        android:icon="@drawable/ic_move"
+        android:title="move"
+        app:showAsAction="always" />
 </menu>

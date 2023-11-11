@@ -5,7 +5,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
-import java.io.Serializable
 
 @Parcelize
 @Entity(tableName = "memo_table")   // SQLite 테이블
@@ -19,5 +18,7 @@ data class Memo(
     @ColumnInfo(name = "date")
     val date: Long?,
     @ColumnInfo(name = "check")
-    var isChecked: Boolean = false
+    var isChecked: Boolean = false,
+    @ColumnInfo(name = "folderId")
+    var folderId: Int? = null
 ) : Parcelable

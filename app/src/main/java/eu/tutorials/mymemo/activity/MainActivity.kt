@@ -2,7 +2,6 @@ package eu.tutorials.mymemo.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -130,6 +129,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     binding.bottomAppbar.visibility = View.GONE
                     binding.fab.visibility = View.VISIBLE
                     searchIcon?.isVisible = true
+                    true
+                }
+
+                // 메모를 다른 폴더로 이동시키기 위한 버튼
+                R.id.moveMemo -> {
+                    folderViewModel.folderNames.observe(this, Observer { folderNames ->
+                        showFolderListDialog(folderNames)
+                    })
                     true
                 }
 
@@ -265,6 +272,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    // BottomAppbar에서 이동 버튼을 눌렀을 때 뜨는 Dialog
+    private fun showFolderListDialog(folderNames: List<String>?) {
+        val builder = AlertDialog.Builder(this)
+            .setTitle("폴더 목록")
+
+        builder.setItems(folderNames?.toTypedArray()) { dialog, which ->
+            val selectedFolderName = folderNames!![which]
+        }
+        builder.show()
     }
 
     // gridLayout에서 spanCount 변경

@@ -12,6 +12,9 @@ interface FolderDao {
     @Query("SELECT * FROM folder_table")
     fun getAllFolders(): LiveData<List<Folder>>
 
+    @Query("SELECT name FROM folder_table")
+    fun getFolderNames(): LiveData<List<String>>
+
     @Insert
     suspend fun insert(folder: Folder)
 

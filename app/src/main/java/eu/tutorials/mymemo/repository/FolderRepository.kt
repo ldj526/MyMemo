@@ -8,6 +8,7 @@ import eu.tutorials.mymemo.room.FolderDao
 class FolderRepository(private val folderDao: FolderDao) {
 
     val folderList: LiveData<List<Folder>> = folderDao.getAllFolders()
+    val folderNames: LiveData<List<String>> = folderDao.getFolderNames()
 
     @Suppress("RedundantSuspendModifier")
     @WorkerThread

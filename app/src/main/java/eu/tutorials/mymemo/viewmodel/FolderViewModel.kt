@@ -15,6 +15,7 @@ class FolderViewModel(private val repository: FolderRepository) : ViewModel() {
     val folderList: LiveData<List<Folder>> = repository.folderList
     val checkboxStates = MutableLiveData<MutableList<Boolean>>()
     val isCheckboxVisible = MutableLiveData<Boolean>().apply { value = false }  // 체크박스 보이기/숨기기 상태
+    val folderNames: LiveData<List<String>> = repository.folderNames
 
     fun insert(folder: Folder) = viewModelScope.launch {    // insert 구현이 UI에서 캡슐화된다.
         repository.insert(folder)
