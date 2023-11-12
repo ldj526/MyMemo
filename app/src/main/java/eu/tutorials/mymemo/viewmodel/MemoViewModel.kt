@@ -43,6 +43,15 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
         val resetStates = MutableList(memoList.value?.size ?: 0) { false }
         checkboxStates.value = resetStates
     }
+
+    // Memo에서 FolderId에 따른 List
+    fun getMemoListByFolderId(folderId: Int?): LiveData<List<Memo>> {
+        return if (folderId == null) {
+            memoList
+        } else {
+            repository.getMemosByFolderId(folderId)
+        }
+    }
 }
 
 class MemoViewModelFactory(private val repository: MemoRepository) : ViewModelProvider.Factory {

@@ -9,6 +9,9 @@ interface MemoDao {
     @Query("SELECT * FROM memo_table ORDER BY date DESC")
     fun getAll(): LiveData<List<Memo>>
 
+    @Query("SELECT * FROM memo_table WHERE folderId = :folderId")
+    fun getMemosByFolderId(folderId: Int): LiveData<List<Memo>>
+
     @Insert
     suspend fun insert(memo: Memo)
 

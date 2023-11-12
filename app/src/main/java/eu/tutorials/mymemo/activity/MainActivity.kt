@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val folderViewModel: FolderViewModel by viewModels() {
         FolderViewModelFactory((application as MemosApplication).folderRepository)
     }
-    private val adapter = MemoListAdapter()
+    private val memoAdapter = MemoListAdapter()
     private val folderAdapter = FolderListAdapter(this)
     private var searchIcon: MenuItem? = null
 
@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         binding.expandableListView.setAdapter(folderAdapter)
 
-        binding.recyclerview.adapter = adapter
+        binding.recyclerview.adapter = memoAdapter
         binding.recyclerview.layoutManager = GridLayoutManager(this, 2)
 
         // folderlist 가져오기
@@ -80,22 +80,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             folders?.let { folderAdapter.setFolder(Folder(null, "폴더", null), it) }
         })
 
-        // getAlphabetizedWords에 의해 반환된 LiveData에 관찰자를 추가합니다.
-        // onChanged() 메서드는 관찰되는 데이터가 변경되고 액티비티가
-        // 포그라운드에 있을 때 실행됩니다.
-        memoViewModel.memoList.observe(this, Observer { memos ->
-            // 어댑터 내의 단어들의 캐시된 복사본을 업데이트합니다.
-            memos?.let { adapter.setMemo(it) }
-        })
+        // Memo 목록 가져오기
+        loadMemos()
 
         // checkbox check 상태 관찰
         memoViewModel.checkboxStates.observe(this, Observer { states ->
-            adapter.updateCheckboxStates(states)
+            memoAdapter.updateCheckboxStates(states)
         })
 
         // checkbox 보이기 / 숨기기 관찰
         memoViewModel.isCheckboxVisible.observe(this, Observer { isVisible ->
-            adapter.setCheckboxVisibility(isVisible)
+            memoAdapter.setCheckboxVisibility(isVisible)
 
             searchIcon?.isVisible = !isVisible
         })
@@ -106,7 +101,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             layoutManager?.spanCount = spanCount
         })
 
-        adapter.onItemLongClicked = {
+        memoAdapter.onItemLongClicked = {
             toggleBottomAppBarVisibility()
             toggleFabVisibility()
             memoViewModel.resetCheckboxStates()
@@ -122,10 +117,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             when (menuItem.itemId) {
                 // BottomAppBar에서 Delete를 눌렀을 때
                 R.id.deleteIcon -> {
-                    val selectedItems = adapter.getSelectedItems() // 선택된 항목들 가져오기
+                    val selectedItems = memoAdapter.getSelectedItems() // 선택된 항목들 가져오기
                     memoViewModel.delete(selectedItems) // ViewModel에서 삭제 로직 호출
-                    adapter.notifyDataSetChanged() // Adapter에 데이터 변경 알림
-                    adapter.showCheckboxes()
+                    memoAdapter.notifyDataSetChanged() // Adapter에 데이터 변경 알림
+                    memoAdapter.showCheckboxes()
                     binding.bottomAppbar.visibility = View.GONE
                     binding.fab.visibility = View.VISIBLE
                     searchIcon?.isVisible = true
@@ -149,11 +144,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    // 메모들 가져오기
+    private fun loadMemos(folderId: Int? = null) {
+        memoViewModel.getMemoListByFolderId(folderId).observe(this, Observer { memos ->
+            memos?.let { memoAdapter.setMemo(it) }
+        })
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        val states = adapter.getCheckboxStates().toMutableList()
+        val states = memoAdapter.getCheckboxStates().toMutableList()
         memoViewModel.updateCheckboxStates(states)  // Checkbox check상태 확인
-        memoViewModel.setCheckboxVisibility(adapter.showCheckBoxes)     // checkbox 보이기/숨기기 확인
+        memoViewModel.setCheckboxVisibility(memoAdapter.showCheckBoxes)     // checkbox 보이기/숨기기 확인
         // BottomAppbar 상태 유지
         outState.putBoolean(
             "BOTTOM_APPBAR_VISIBLE",
@@ -176,7 +178,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     // BottomAppBar View 관리
     private fun toggleBottomAppBarVisibility() {
-        adapter.setOnCheckboxChangedListener(object : MemoListAdapter.OnCheckboxChangedListener {
+        memoAdapter.setOnCheckboxChangedListener(object : MemoListAdapter.OnCheckboxChangedListener {
             override fun onCheckboxChanged(selectedCount: Int) {
                 // 선택된 항목이 0보다 많을 경우에만 bottomAppBar 보이게 하기
                 if (selectedCount > 0) {
@@ -204,7 +206,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             // 텍스트 입력 or 수정 시에 호출
             override fun onQueryTextChange(newText: String?): Boolean {
                 if (newText != null) {
-                    adapter.filterList(newText)
+                    memoAdapter.filterList(newText)
                 }
                 return true
             }
@@ -226,7 +228,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             // 편집 버튼 눌렀을 시
             R.id.editIcon -> {
                 memoViewModel.resetCheckboxStates()
-                adapter.showCheckboxes()
+                memoAdapter.showCheckboxes()
                 toggleBottomAppBarVisibility()
                 toggleFabVisibility()
             }
@@ -289,7 +291,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private fun changeSpanCount(spanCount: Int) {
         val layoutManager = binding.recyclerview.layoutManager as? GridLayoutManager
         layoutManager?.spanCount = spanCount
-        adapter.notifyDataSetChanged()
+        memoAdapter.notifyDataSetChanged()
         memoViewModel.spanCount.value = spanCount
     }
 

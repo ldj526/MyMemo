@@ -22,4 +22,8 @@ class MemoRepository(private val memoDao: MemoDao) {
     suspend fun update(memo: Memo) {
         memoDao.update(memo)
     }
+
+    fun getMemosByFolderId(folderId: Int): LiveData<List<Memo>> {
+        return memoDao.getMemosByFolderId(folderId)
+    }
 }
