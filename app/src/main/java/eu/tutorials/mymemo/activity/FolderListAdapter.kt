@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.CheckBox
+import android.widget.ExpandableListView
+import android.widget.ImageView
 import android.widget.TextView
 import eu.tutorials.mymemo.R
 import eu.tutorials.mymemo.model.Folder
@@ -26,10 +28,10 @@ class FolderListAdapter(private val context: Context) : BaseExpandableListAdapte
 
     override fun getChildrenCount(groupPosition: Int) = childList[groupPosition].size
 
-    override fun getGroup(groupPosition: Int) = parentList[groupPosition].name
+    override fun getGroup(groupPosition: Int) = parentList[groupPosition]
 
     override fun getChild(groupPosition: Int, childPosition: Int) =
-        childList[groupPosition][childPosition].name
+        childList[groupPosition][childPosition]
 
     override fun getGroupId(groupPosition: Int) = groupPosition.toLong()
 
@@ -45,8 +47,15 @@ class FolderListAdapter(private val context: Context) : BaseExpandableListAdapte
     ): View {
         val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val parentView = inflater.inflate(R.layout.drawer_parent, parent, false)
+        val folderImage = parentView.findViewById<ImageView>(R.id.folderImage)
+        val expandableListView = parent as ExpandableListView
+        // Image를 클릭했을 때 처리
+        folderImage.setOnClickListener {
+            if(isExpanded) expandableListView.collapseGroup(groupPosition)
+            else expandableListView.expandGroup(groupPosition)
+        }
         val parentCategory = parentView.findViewById<TextView>(R.id.folderList)
-        parentCategory.text = getGroup(groupPosition)
+        parentCategory.text = parentList[groupPosition].name
         return parentView
     }
 
@@ -70,7 +79,7 @@ class FolderListAdapter(private val context: Context) : BaseExpandableListAdapte
             Log.d("Check", "folderCount: $selectedCount")
             folderCheckboxChangedListener?.onFolderCheckboxChanged(selectedCount)
         }
-        childCategory.text = getChild(groupPosition, childPosition)
+        childCategory.text = childList[groupPosition][childPosition].name
         return childView
     }
 

@@ -142,6 +142,25 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             val intent = Intent(this, FolderListActivity::class.java)
             startActivity(intent)
         }
+
+        // 전체 폴더를 클릭 시
+        binding.expandableListView.setOnGroupClickListener { parent, v, groupPosition, id ->
+            binding.drawerLayout.closeDrawers()
+            loadMemos()
+            true
+        }
+
+        // 각각의 폴더를 클릭 시
+        binding.expandableListView.setOnChildClickListener { parent, v, groupPosition, childPosition, id ->
+            val selectedFolder = binding.expandableListView.expandableListAdapter.getChild(
+                groupPosition,
+                childPosition
+            ) as Folder
+            val folderId = selectedFolder.id
+            binding.drawerLayout.closeDrawers()
+            loadMemos(folderId)
+            true
+        }
     }
 
     // 메모들 가져오기
@@ -178,7 +197,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     // BottomAppBar View 관리
     private fun toggleBottomAppBarVisibility() {
-        memoAdapter.setOnCheckboxChangedListener(object : MemoListAdapter.OnCheckboxChangedListener {
+        memoAdapter.setOnCheckboxChangedListener(object :
+            MemoListAdapter.OnCheckboxChangedListener {
             override fun onCheckboxChanged(selectedCount: Int) {
                 // 선택된 항목이 0보다 많을 경우에만 bottomAppBar 보이게 하기
                 if (selectedCount > 0) {

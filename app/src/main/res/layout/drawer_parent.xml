@@ -5,22 +5,27 @@
     android:layout_height="match_parent">
 
     <ImageView
+        android:id="@+id/folderImage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_folder"
+        android:layout_marginStart="18dp"
         app:layout_constraintBottom_toBottomOf="@+id/folderList"
-        app:layout_constraintEnd_toStartOf="@+id/folderList"
-        app:layout_constraintTop_toTopOf="@+id/folderList" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/folderList"
+        app:layout_constraintVertical_bias="0.533" />
+
     <TextView
         android:id="@+id/folderList"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="8dp"
         android:text="폴더"
         android:textSize="16sp"
-        android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/folderImage"
         app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
