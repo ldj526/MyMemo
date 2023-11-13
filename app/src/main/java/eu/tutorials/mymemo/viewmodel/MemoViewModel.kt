@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import eu.tutorials.mymemo.model.Memo
 import eu.tutorials.mymemo.repository.MemoRepository
@@ -15,6 +16,27 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
     val checkboxStates = MutableLiveData<MutableList<Boolean>>()
     val isCheckboxVisible = MutableLiveData<Boolean>().apply { value = false }  // 체크박스 보이기/숨기기 상태
     val spanCount = MutableLiveData(2)
+    private val _currentFolderId = MutableLiveData<Int?>()
+
+    // 현재 선택된 폴더 ID에 따라 필터링된 메모 목록
+    val filteredMemos: LiveData<List<Memo>> = this._currentFolderId.switchMap { folderId ->
+        if (folderId == -1) {
+            memoList // 모든 메모를 가져옴
+        } else {
+            repository.getMemosByFolderId(folderId!!) // 특정 폴더 ID에 해당하는 메모만 가져옴
+        }
+    }
+
+    init {
+        // 앱 시작 시 전체목록을 보여주기 위해 초기값 설정
+        setCurrentFolderId(-1)
+    }
+
+
+    // 현재 선택된 폴더 ID를 업데이트하는 함수
+    fun setCurrentFolderId(folderId: Int?) {
+        _currentFolderId.value = folderId
+    }
 
     fun insert(memo: Memo) = viewModelScope.launch {    // insert 구현이 UI에서 캡슐화된다.
         repository.insert(memo)
@@ -42,15 +64,6 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
     fun resetCheckboxStates() {
         val resetStates = MutableList(memoList.value?.size ?: 0) { false }
         checkboxStates.value = resetStates
-    }
-
-    // Memo에서 FolderId에 따른 List
-    fun getMemoListByFolderId(folderId: Int?): LiveData<List<Memo>> {
-        return if (folderId == null) {
-            memoList
-        } else {
-            repository.getMemosByFolderId(folderId)
-        }
     }
 }
 

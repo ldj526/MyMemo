@@ -1,5 +1,6 @@
 package eu.tutorials.mymemo.activity
 
+import android.content.Context
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
@@ -26,6 +27,10 @@ class NewMemoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_new_memo)
 
+        // MainActivity로부터 folderId 읽기
+        val sharedPref = getSharedPreferences("MemosApplication", Context.MODE_PRIVATE)
+        val folderId = sharedPref.getInt("lastSelectedFolderId", -1)
+
         editTitle = findViewById(R.id.et_title)
         editContent = findViewById(R.id.et_content)
 
@@ -37,8 +42,7 @@ class NewMemoActivity : AppCompatActivity() {
                 Toast.makeText(applicationContext, "제목과 내용을 입력해주세요.", Toast.LENGTH_LONG).show()
             } else {
                 val timeStamp = System.currentTimeMillis()
-                val memo = Memo(null, title, content, timeStamp, false)
-                Log.d("Check", "$timeStamp")
+                val memo = Memo(null, title, content, timeStamp, false, folderId)
                 memoViewModel.insert(memo)
                 finish()
             }

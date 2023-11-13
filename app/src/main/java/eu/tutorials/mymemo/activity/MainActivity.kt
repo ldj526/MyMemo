@@ -1,7 +1,9 @@
 package eu.tutorials.mymemo.activity
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -48,6 +50,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    private var folderId: Int? = -1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
@@ -81,7 +85,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         })
 
         // Memo 목록 가져오기
-        loadMemos()
+        memoViewModel.filteredMemos.observe(this, Observer { memos ->
+            memos?.let { memoAdapter.setMemo(it) }
+        })
+        Log.d("Check", "main에서 목록 folderId: $folderId")
 
         // checkbox check 상태 관찰
         memoViewModel.checkboxStates.observe(this, Observer { states ->
@@ -124,6 +131,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     binding.bottomAppbar.visibility = View.GONE
                     binding.fab.visibility = View.VISIBLE
                     searchIcon?.isVisible = true
+                    Log.d("Check", "삭제하고 목록 folderId: $folderId")
                     true
                 }
 
@@ -143,33 +151,39 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             startActivity(intent)
         }
 
-        // 전체 폴더를 클릭 시
+        // 부모 폴더를 클릭 시
         binding.expandableListView.setOnGroupClickListener { parent, v, groupPosition, id ->
             binding.drawerLayout.closeDrawers()
-            loadMemos()
+            folderId = -1
+            sharedPrefFolderId()
+            memoViewModel.setCurrentFolderId(folderId)
+            Log.d("Check", "부모 폴더 선택하고 목록 folderId: $folderId")
             true
         }
 
-        // 각각의 폴더를 클릭 시
+        // 자식 폴더를 클릭 시
         binding.expandableListView.setOnChildClickListener { parent, v, groupPosition, childPosition, id ->
             val selectedFolder = binding.expandableListView.expandableListAdapter.getChild(
                 groupPosition,
                 childPosition
             ) as Folder
-            val folderId = selectedFolder.id
+            folderId = selectedFolder.id
+            sharedPrefFolderId()
             binding.drawerLayout.closeDrawers()
-            loadMemos(folderId)
+            memoViewModel.setCurrentFolderId(folderId)
+            Log.d("Check", "폴더 선택하고 목록 folderId: $folderId")
             true
         }
     }
 
-    // 메모들 가져오기
-    private fun loadMemos(folderId: Int? = null) {
-        memoViewModel.getMemoListByFolderId(folderId).observe(this, Observer { memos ->
-            memos?.let { memoAdapter.setMemo(it) }
-        })
+    private fun sharedPrefFolderId() {
+        // SharedPreference로 folderId 저장
+        val sharedPref = getSharedPreferences("MemosApplication", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putInt("lastSelectedFolderId", folderId!!)
+            apply()
+        }
     }
-
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         val states = memoAdapter.getCheckboxStates().toMutableList()

@@ -1,5 +1,6 @@
 package eu.tutorials.mymemo.activity
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
@@ -32,6 +33,10 @@ class EditMemoActivity : AppCompatActivity() {
         updateTitle = findViewById(R.id.update_title)
         updateContent = findViewById(R.id.update_content)
 
+        // MainActivity로부터 folderId 읽기
+        val sharedPref = getSharedPreferences("MemosApplication", Context.MODE_PRIVATE)
+        val folderId = sharedPref.getInt("lastSelectedFolderId", -1)
+
         val currentMemo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getParcelableExtra("currentMemo", Memo::class.java)
         } else {
@@ -56,7 +61,7 @@ class EditMemoActivity : AppCompatActivity() {
             if (TextUtils.isEmpty(title) || TextUtils.isEmpty(content)) {
                 Toast.makeText(applicationContext, "제목과 내용을 입력해주세요.", Toast.LENGTH_LONG).show()
             } else {
-                val memo = Memo(currentId!!, title, content, currentMemo?.date, false)
+                val memo = Memo(currentId!!, title, content, currentMemo?.date, false, folderId)
                 memoViewModel.update(memo)
                 finish()
             }
