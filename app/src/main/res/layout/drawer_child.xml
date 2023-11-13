@@ -10,29 +10,32 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:visibility="gone"
-        tools:visibility="visible"
+        android:layout_marginStart="10dp"
         app:layout_constraintBottom_toBottomOf="@+id/imageView"
-        app:layout_constraintEnd_toStartOf="@+id/imageView"
-        app:layout_constraintTop_toTopOf="@+id/imageView" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/imageView"
+        tools:visibility="visible" />
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_folder"
+        android:layout_marginStart="50dp"
         app:layout_constraintBottom_toBottomOf="@+id/folder1"
-        app:layout_constraintEnd_toStartOf="@+id/folder1"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/folder1" />
 
     <TextView
         android:id="@+id/folder1"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="40dp"
-        android:text="폴더1"
         android:padding="8dp"
+        android:gravity="center"
+        android:text="폴더1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toEndOf="@+id/imageView"
+        app:layout_constraintTop_toTopOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

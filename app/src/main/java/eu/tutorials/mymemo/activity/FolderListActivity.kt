@@ -53,7 +53,7 @@ class FolderListActivity : AppCompatActivity() {
                     val folderName = input.text.toString()
                     if (folderName.isNotEmpty()) {
                         // 새 폴더 데이터 추가
-                        val newFolder = Folder(null, folderName, null)
+                        val newFolder = Folder(null, folderName, 0)
                         // 여기에 데이터베이스 저장 로직 추가
                         folderViewModel.insert(newFolder)
                     }
@@ -80,7 +80,9 @@ class FolderListActivity : AppCompatActivity() {
 
         // folderlist 가져오기
         folderViewModel.folderList.observe(this, Observer { folders ->
-            folders?.let { folderAdapter.setFolder(Folder(null, "폴더", null), it) }
+            folders?.let { folderAdapter.setFolder(Folder(null, "폴더", 0), it) }
+            // expandableListView가 펼쳐진 상태로 보이게 하기
+            binding.expandableListView.expandGroup(0)
         })
 
         binding.bottomAppbar.setOnMenuItemClickListener { menuItem ->

@@ -24,6 +24,7 @@ import eu.tutorials.mymemo.MemosApplication
 import eu.tutorials.mymemo.R
 import eu.tutorials.mymemo.databinding.ActivityMainBinding
 import eu.tutorials.mymemo.model.Folder
+import eu.tutorials.mymemo.utils.FolderListDialogFragment
 import eu.tutorials.mymemo.viewmodel.FolderViewModel
 import eu.tutorials.mymemo.viewmodel.FolderViewModelFactory
 
@@ -81,7 +82,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // folderlist 가져오기
         folderViewModel.folderList.observe(this, Observer { folders ->
-            folders?.let { folderAdapter.setFolder(Folder(null, "폴더", null), it) }
+            folders?.let { folderAdapter.setFolder(Folder(null, "폴더", 0), it) }
+            // expandableListView가 펼쳐진 상태로 보이게 하기
+            binding.expandableListView.expandGroup(0)
         })
 
         // Memo 목록 가져오기
@@ -138,7 +141,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 // 메모를 다른 폴더로 이동시키기 위한 버튼
                 R.id.moveMemo -> {
                     folderViewModel.folderNames.observe(this, Observer { folderNames ->
-                        showFolderListDialog(folderNames)
+                        FolderListDialogFragment("폴더 목록").show(supportFragmentManager, "CustomDialog")
                     })
                     true
                 }
@@ -289,7 +292,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         val folderName = input.text.toString()
                         if (folderName.isNotEmpty()) {
                             // 새 폴더 데이터 추가
-                            val newFolder = Folder(null, folderName, null)
+                            val newFolder = Folder(null, folderName, 0)
                             // 여기에 데이터베이스 저장 로직 추가
                             folderViewModel.insert(newFolder)
                         }
@@ -308,17 +311,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    // BottomAppbar에서 이동 버튼을 눌렀을 때 뜨는 Dialog
-    private fun showFolderListDialog(folderNames: List<String>?) {
-        val builder = AlertDialog.Builder(this)
-            .setTitle("폴더 목록")
-
-        builder.setItems(folderNames?.toTypedArray()) { dialog, which ->
-            val selectedFolderName = folderNames!![which]
-        }
-        builder.show()
     }
 
     // gridLayout에서 spanCount 변경
