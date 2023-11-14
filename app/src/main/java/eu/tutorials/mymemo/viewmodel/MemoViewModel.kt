@@ -13,11 +13,16 @@ import kotlinx.coroutines.launch
 class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
 
     val memoList: LiveData<List<Memo>> = repository.memoList
-    val checkboxStates = MutableLiveData<MutableList<Boolean>>()
-    val isCheckboxVisible = MutableLiveData<Boolean>().apply { value = false }  // 체크박스 보이기/숨기기 상태
-    val spanCount = MutableLiveData(2)
-    private val _currentFolderId = MutableLiveData<Int?>()
 
+    private val _checkboxStates = MutableLiveData<MutableList<Boolean>>()
+    val checkboxStates: MutableLiveData<MutableList<Boolean>> = _checkboxStates
+
+    private val _checkboxVisibility = MutableLiveData<Boolean>()
+    val checkboxVisibility: LiveData<Boolean> = _checkboxVisibility
+
+    val spanCount = MutableLiveData(2)
+
+    private val _currentFolderId = MutableLiveData<Int?>()
     // 현재 선택된 폴더 ID에 따라 필터링된 메모 목록
     val filteredMemos: LiveData<List<Memo>> = this._currentFolderId.switchMap { folderId ->
         if (folderId == -1) {
@@ -58,18 +63,18 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
 
     // checkbox check 상태 유지
     fun updateCheckboxStates(states: MutableList<Boolean>) {
-        checkboxStates.value = states
+        _checkboxStates.value = states
     }
 
     // checkbox 보이기 / 숨기기 유지
     fun setCheckboxVisibility(visible: Boolean) {
-        isCheckboxVisible.value = visible
+        _checkboxVisibility.value = visible
     }
 
     // checkbox 초기화
     fun resetCheckboxStates() {
         val resetStates = MutableList(memoList.value?.size ?: 0) { false }
-        checkboxStates.value = resetStates
+        _checkboxStates.value = resetStates
     }
 }
 

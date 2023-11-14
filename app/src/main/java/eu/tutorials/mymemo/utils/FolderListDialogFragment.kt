@@ -69,7 +69,6 @@ class FolderListDialogFragment(private val message: String, val selectedMemos: L
             ) as Folder
             val selectedFolderId = selectedFolder.id
             memoViewModel.updateMemoFolder(selectedMemos, selectedFolderId)
-            // checkbox 초기화 안되는 것과 list가 갱신이 안됨
             dismiss()
             true
         }
@@ -93,5 +92,7 @@ class FolderListDialogFragment(private val message: String, val selectedMemos: L
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
         memoViewModel.setCurrentFolderId(folderId)
+        memoViewModel.setCheckboxVisibility(false)
+        memoViewModel.resetCheckboxStates()
     }
 }

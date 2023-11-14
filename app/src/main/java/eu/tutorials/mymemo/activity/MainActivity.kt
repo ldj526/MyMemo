@@ -99,7 +99,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         })
 
         // checkbox 보이기 / 숨기기 관찰
-        memoViewModel.isCheckboxVisible.observe(this, Observer { isVisible ->
+        memoViewModel.checkboxVisibility.observe(this, Observer { isVisible ->
             memoAdapter.setCheckboxVisibility(isVisible)
 
             searchIcon?.isVisible = !isVisible
