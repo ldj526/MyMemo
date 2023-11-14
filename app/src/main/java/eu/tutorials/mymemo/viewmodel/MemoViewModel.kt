@@ -1,5 +1,6 @@
 package eu.tutorials.mymemo
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -20,9 +21,14 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
     private val _checkboxVisibility = MutableLiveData<Boolean>()
     val checkboxVisibility: LiveData<Boolean> = _checkboxVisibility
 
+    // 비동기 작업 결과를 알릴 LiveData
+    private val _updateResult = MutableLiveData<Boolean>()
+    val updateResult: LiveData<Boolean> = _updateResult
+
     val spanCount = MutableLiveData(2)
 
     private val _currentFolderId = MutableLiveData<Int?>()
+
     // 현재 선택된 폴더 ID에 따라 필터링된 메모 목록
     val filteredMemos: LiveData<List<Memo>> = this._currentFolderId.switchMap { folderId ->
         if (folderId == -1) {
@@ -38,10 +44,17 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
     }
 
     // 선택한 메모들의 folderId 변경
-    fun updateMemoFolder(selectedMemos: List<Memo>, newFolderId: Int?) = viewModelScope.launch {
+    fun updateMemoFolder(selectedMemos: List<Memo>, newFolderId: Int?, isChecked: Boolean) = viewModelScope.launch {
         // 선택한 메모들의 folderId를 새로운 folderId로 설정하고 업데이트
-        val updatedMemos = selectedMemos.map { it.copy(folderId = newFolderId) }
+        val updatedMemos = selectedMemos.map { it.copy(folderId = newFolderId, isChecked = false) }
         repository.updateMemos(updatedMemos)
+        Log.d("check", "updateMemoFolder")
+        _updateResult.value = true
+    }
+
+    // updateResult 값 초기화
+    fun resetUpdateResult() {
+        _updateResult.value = false
     }
 
     // 현재 선택된 폴더 ID를 업데이트하는 함수
@@ -61,11 +74,6 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
         repository.update(memo)
     }
 
-    // checkbox check 상태 유지
-    fun updateCheckboxStates(states: MutableList<Boolean>) {
-        _checkboxStates.value = states
-    }
-
     // checkbox 보이기 / 숨기기 유지
     fun setCheckboxVisibility(visible: Boolean) {
         _checkboxVisibility.value = visible
@@ -74,6 +82,7 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
     // checkbox 초기화
     fun resetCheckboxStates() {
         val resetStates = MutableList(memoList.value?.size ?: 0) { false }
+        Log.d("check", "resetCheckboxStates()에서 $resetStates")
         _checkboxStates.value = resetStates
     }
 }

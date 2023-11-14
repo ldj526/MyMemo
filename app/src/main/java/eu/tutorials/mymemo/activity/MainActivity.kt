@@ -27,6 +27,7 @@ import eu.tutorials.mymemo.model.Folder
 import eu.tutorials.mymemo.utils.FolderListDialogFragment
 import eu.tutorials.mymemo.viewmodel.FolderViewModel
 import eu.tutorials.mymemo.viewmodel.FolderViewModelFactory
+import eu.tutorials.mymemo.viewmodel.MainViewModel
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
@@ -39,14 +40,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val folderViewModel: FolderViewModel by viewModels() {
         FolderViewModelFactory((application as MemosApplication).folderRepository)
     }
+    private val mainViewModel: MainViewModel by viewModels()
     private val memoAdapter = MemoListAdapter()
     private val folderAdapter = FolderListAdapter(this)
     private var searchIcon: MenuItem? = null
 
     private val callback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {    // 뒤로가기 클릭 시
+            // 뒤로가기 시 drawerLayout 닫힘
             if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
                 binding.drawerLayout.closeDrawers()
+            }
+            // 뒤로가기 시 checkbox 풀리기
+            if (memoAdapter.showCheckBoxes) {
+                memoViewModel.setCheckboxVisibility(false)
+                mainViewModel.setCheckboxVisibility(false)
             }
         }
     }
@@ -69,6 +77,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             binding.fab.visibility = if (isFabVisible) View.GONE else View.VISIBLE
         }
 
+        // 앱 시작 시 folderId -1로 초기화
+        val sharedPref = getSharedPreferences("MemosApplication", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putInt("lastSelectedFolderId", -1)
+            apply()
+        }
+
         setSupportActionBar(binding.toolBar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu)
@@ -87,6 +102,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             binding.expandableListView.expandGroup(0)
         })
 
+        mainViewModel.isCheckboxVisible.observe(this, Observer { isVisible ->
+            Log.d("check", "mainViewModel에서 관찰")
+            updateUI(isVisible)
+        })
+
         // Memo 목록 가져오기
         memoViewModel.filteredMemos.observe(this, Observer { memos ->
             memos?.let { memoAdapter.setMemo(it) }
@@ -101,8 +121,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // checkbox 보이기 / 숨기기 관찰
         memoViewModel.checkboxVisibility.observe(this, Observer { isVisible ->
             memoAdapter.setCheckboxVisibility(isVisible)
-
-            searchIcon?.isVisible = !isVisible
         })
 
         // 격자로 보는 방식 관찰
@@ -113,9 +131,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         memoAdapter.onItemLongClicked = {
             toggleBottomAppBarVisibility()
-            toggleFabVisibility()
+            mainViewModel.setCheckboxVisibility(true)
             memoViewModel.resetCheckboxStates()
-            searchIcon?.isVisible = false
         }
 
         binding.fab.setOnClickListener {
@@ -130,10 +147,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     val selectedItems = memoAdapter.getSelectedItems() // 선택된 항목들 가져오기
                     memoViewModel.delete(selectedItems) // ViewModel에서 삭제 로직 호출
                     memoAdapter.notifyDataSetChanged() // Adapter에 데이터 변경 알림
-                    memoAdapter.showCheckboxes()
                     binding.bottomAppbar.visibility = View.GONE
-                    binding.fab.visibility = View.VISIBLE
-                    searchIcon?.isVisible = true
+                    memoAdapter.showCheckboxes()
+                    mainViewModel.setCheckboxVisibility(memoAdapter.showCheckBoxes)
                     Log.d("Check", "삭제하고 목록 folderId: $folderId")
                     true
                 }
@@ -143,7 +159,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     folderViewModel.folderNames.observe(this, Observer { folderNames ->
                         val selectedItems = memoAdapter.getSelectedItems() // 선택된 항목들 가져오기
                         Log.d("check", "selectedItem : $selectedItems")
-                        FolderListDialogFragment("폴더 목록", selectedItems).show(supportFragmentManager, "CustomDialog")
+                        FolderListDialogFragment(
+                            "폴더 목록",
+                            selectedItems
+                        ).show(supportFragmentManager, "CustomDialog")
                     })
                     true
                 }
@@ -181,6 +200,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    // UI 변경
+    private fun updateUI(isCheckboxVisible: Boolean) {
+        Log.d("check", "updateUI")
+        if (isCheckboxVisible) {
+            binding.fab.visibility = View.GONE
+            supportActionBar?.setDisplayHomeAsUpEnabled(false)
+            searchIcon?.isVisible = false
+        } else {
+            binding.fab.visibility = View.VISIBLE
+            binding.bottomAppbar.visibility = View.GONE
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            searchIcon?.isVisible = true
+        }
+    }
+
     private fun sharedPrefFolderId() {
         // SharedPreference로 folderId 저장
         val sharedPref = getSharedPreferences("MemosApplication", Context.MODE_PRIVATE)
@@ -189,10 +223,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             apply()
         }
     }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        val states = memoAdapter.getCheckboxStates().toMutableList()
-        memoViewModel.updateCheckboxStates(states)  // Checkbox check상태 확인
         memoViewModel.setCheckboxVisibility(memoAdapter.showCheckBoxes)     // checkbox 보이기/숨기기 확인
         // BottomAppbar 상태 유지
         outState.putBoolean(
@@ -201,17 +234,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         )
         // Floating action button 상태 유지
         outState.putBoolean("FAB_VISIBLE", binding.fab.visibility == View.GONE)
-    }
-
-    // Floating action button view 관리
-    private fun toggleFabVisibility() {
-        if (binding.fab.visibility == View.GONE) {
-            binding.fab.visibility = View.VISIBLE
-            searchIcon?.isVisible = true
-        } else {
-            binding.fab.visibility = View.GONE
-            searchIcon?.isVisible = false
-        }
     }
 
     // BottomAppBar View 관리
@@ -269,7 +291,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 memoViewModel.resetCheckboxStates()
                 memoAdapter.showCheckboxes()
                 toggleBottomAppBarVisibility()
-                toggleFabVisibility()
+                mainViewModel.setCheckboxVisibility(memoAdapter.showCheckBoxes)
             }
 
             R.id.twoGrid -> {

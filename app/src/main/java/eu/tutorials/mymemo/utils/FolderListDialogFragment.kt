@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ExpandableListView
-import androidx.activity.viewModels
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
@@ -25,8 +24,10 @@ import eu.tutorials.mymemo.model.Folder
 import eu.tutorials.mymemo.model.Memo
 import eu.tutorials.mymemo.viewmodel.FolderViewModel
 import eu.tutorials.mymemo.viewmodel.FolderViewModelFactory
+import eu.tutorials.mymemo.viewmodel.MainViewModel
 
-class FolderListDialogFragment(private val message: String, val selectedMemos: List<Memo>) : DialogFragment() {
+class FolderListDialogFragment(private val message: String, val selectedMemos: List<Memo>) :
+    DialogFragment() {
 
     private val folderViewModel: FolderViewModel by activityViewModels() {
         FolderViewModelFactory((activity?.application as MemosApplication).folderRepository)
@@ -37,6 +38,7 @@ class FolderListDialogFragment(private val message: String, val selectedMemos: L
         MemoViewModelFactory((activity?.application as MemosApplication).repository)
     }
     private lateinit var memoAdapter: MemoListAdapter
+    private val mainViewModel: MainViewModel by activityViewModels()
     private var folderId: Int? = -1
 
     override fun onCreateView(
@@ -45,7 +47,8 @@ class FolderListDialogFragment(private val message: String, val selectedMemos: L
     ): View? {
         // Inflate the layout for this fragment
         // MainActivity로부터 folderId 읽기
-        val sharedPref = this.activity?.getSharedPreferences("MemosApplication", Context.MODE_PRIVATE)
+        val sharedPref =
+            this.activity?.getSharedPreferences("MemosApplication", Context.MODE_PRIVATE)
         folderId = sharedPref?.getInt("lastSelectedFolderId", -1)
 
         val view = inflater.inflate(R.layout.fragment_folder_list_dialog, container, false)
@@ -61,6 +64,25 @@ class FolderListDialogFragment(private val message: String, val selectedMemos: L
             folderListView.expandGroup(0)
         })
 
+        // updateMemoFolder가 완료되면 Dialog를 닫아준다.
+        memoViewModel.updateResult.observe(this, Observer { result ->
+            if (result) {
+                Log.d("check", "result")
+                memoViewModel.setCurrentFolderId(folderId)
+                memoViewModel.setCheckboxVisibility(false)  // checkbox view
+                mainViewModel.setCheckboxVisibility(false)  // bottomAppbar, fab, searchIcon view
+                memoViewModel.resetUpdateResult()
+                dismiss()
+            }
+        })
+
+        // 부모 폴더를 클릭 시
+        folderListView.setOnGroupClickListener { parent, v, groupPosition, id ->
+            val selectedFolderId = -1
+            memoViewModel.updateMemoFolder(selectedMemos, selectedFolderId, false)
+            true
+        }
+
         // 자식 폴더를 클릭 시
         folderListView.setOnChildClickListener { parent, v, groupPosition, childPosition, id ->
             val selectedFolder = folderListView.expandableListAdapter.getChild(
@@ -68,8 +90,7 @@ class FolderListDialogFragment(private val message: String, val selectedMemos: L
                 childPosition
             ) as Folder
             val selectedFolderId = selectedFolder.id
-            memoViewModel.updateMemoFolder(selectedMemos, selectedFolderId)
-            dismiss()
+            memoViewModel.updateMemoFolder(selectedMemos, selectedFolderId, false)
             true
         }
         return view
@@ -87,12 +108,5 @@ class FolderListDialogFragment(private val message: String, val selectedMemos: L
             window.setGravity(Gravity.BOTTOM)
             window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         }
-    }
-
-    override fun onDismiss(dialog: DialogInterface) {
-        super.onDismiss(dialog)
-        memoViewModel.setCurrentFolderId(folderId)
-        memoViewModel.setCheckboxVisibility(false)
-        memoViewModel.resetCheckboxStates()
     }
 }
