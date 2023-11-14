@@ -32,6 +32,12 @@ class MemoViewModel(private val repository: MemoRepository) : ViewModel() {
         setCurrentFolderId(-1)
     }
 
+    // 선택한 메모들의 folderId 변경
+    fun updateMemoFolder(selectedMemos: List<Memo>, newFolderId: Int?) = viewModelScope.launch {
+        // 선택한 메모들의 folderId를 새로운 folderId로 설정하고 업데이트
+        val updatedMemos = selectedMemos.map { it.copy(folderId = newFolderId) }
+        repository.updateMemos(updatedMemos)
+    }
 
     // 현재 선택된 폴더 ID를 업데이트하는 함수
     fun setCurrentFolderId(folderId: Int?) {

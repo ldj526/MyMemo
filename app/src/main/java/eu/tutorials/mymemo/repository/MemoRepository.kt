@@ -23,6 +23,13 @@ class MemoRepository(private val memoDao: MemoDao) {
         memoDao.update(memo)
     }
 
+    // 여러 메모 업데이트
+    suspend fun updateMemos(memos:List<Memo>) {
+        memos.forEach { memo ->
+            memoDao.update(memo)
+        }
+    }
+
     fun getMemosByFolderId(folderId: Int): LiveData<List<Memo>> {
         return memoDao.getMemosByFolderId(folderId)
     }

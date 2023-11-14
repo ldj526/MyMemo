@@ -141,7 +141,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 // 메모를 다른 폴더로 이동시키기 위한 버튼
                 R.id.moveMemo -> {
                     folderViewModel.folderNames.observe(this, Observer { folderNames ->
-                        FolderListDialogFragment("폴더 목록").show(supportFragmentManager, "CustomDialog")
+                        val selectedItems = memoAdapter.getSelectedItems() // 선택된 항목들 가져오기
+                        Log.d("check", "selectedItem : $selectedItems")
+                        FolderListDialogFragment("폴더 목록", selectedItems).show(supportFragmentManager, "CustomDialog")
                     })
                     true
                 }
