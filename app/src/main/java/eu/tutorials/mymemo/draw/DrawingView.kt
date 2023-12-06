@@ -7,15 +7,18 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.AttributeSet
+import android.util.Log
+import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
+import java.lang.reflect.TypeVariable
 
 class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private var drawPath: CustomPath? = null
     private var canvasBitmap: Bitmap? = null
     private var drawPaint: Paint? = null
     private var canvasPaint: Paint? = null
-    private var brushSize: Float = 0.toFloat()         // 캔버스에 그릴 브러쉬 크기
+    var brushSize: Float = 3.0.toFloat()         // 캔버스에 그릴 브러쉬 크기
     private var color = Color.BLACK     // 획의 색상 설정
     private var isDrawingEnabled = false
 
@@ -36,7 +39,6 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         drawPaint!!.strokeJoin = Paint.Join.ROUND
         drawPaint!!.strokeCap = Paint.Cap.ROUND
         canvasPaint = Paint(Paint.DITHER_FLAG)
-        brushSize = 20.toFloat()
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -112,6 +114,26 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     // 그리기 비활성화
     fun disableDrawing() {
         isDrawingEnabled = false
+    }
+
+    // 브러쉬의 크기변경하는 메서드
+    fun setSizeForBrush(newSize: Float) {
+        brushSize = convertDpToPx(newSize)  // 해상도 별로 px 값이 다르므로 px로 변환
+        drawPaint!!.strokeWidth = brushSize
+        brushSize = convertPxToDp(brushSize)    // SeekBar의 progress 값을 위해 변환
+    }
+
+    // dp 값을 px로 변환
+    private fun convertDpToPx(dp: Float): Float {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            dp, resources.displayMetrics
+        )
+    }
+
+    // px 값을 dp로 변환
+    private fun convertPxToDp(px: Float): Float {
+        return px / resources.displayMetrics.density
     }
 
     // 색상, 획 크기를 위한 inner class
