@@ -7,11 +7,9 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.AttributeSet
-import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
-import java.lang.reflect.TypeVariable
 
 class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private var drawPath: CustomPath? = null
@@ -134,6 +132,12 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     // px 값을 dp로 변환
     private fun convertPxToDp(px: Float): Float {
         return px / resources.displayMetrics.density
+    }
+
+    // 색상 변경
+    fun setColor(newColor: String) {
+        color = Color.parseColor(newColor)
+        drawPaint!!.color = color
     }
 
     // 색상, 획 크기를 위한 inner class

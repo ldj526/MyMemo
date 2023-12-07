@@ -12,4 +12,11 @@
     <color name="appBackground">#9a19fc</color>
     <color name="buttonLabel">#FFFFFF</color>
 
+    <color name="skin">#ffcc99</color>
+    <color name="red">#ff0000</color>
+    <color name="green">#00ff00</color>
+    <color name="blue">#0000ff</color>
+    <color name="yellow">#ffff00</color>
+    <color name="lollipop">#35a79c</color>
+    <color name="random">#a349b1</color>
 </resources>

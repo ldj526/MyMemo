@@ -4,16 +4,18 @@ import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.text.TextUtils
-import android.util.Log
-import android.widget.Button
+import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.view.get
 import com.google.android.material.bottomappbar.BottomAppBar
 import eu.tutorials.mymemo.MemoViewModel
 import eu.tutorials.mymemo.MemoViewModelFactory
@@ -24,7 +26,7 @@ import eu.tutorials.mymemo.model.Memo
 
 class NewMemoActivity : AppCompatActivity() {
 
-    private var drawingView: DrawingView? = null
+    private lateinit var drawingView: DrawingView
 
     private lateinit var editTitle: EditText
     private lateinit var editContent: EditText
@@ -32,6 +34,9 @@ class NewMemoActivity : AppCompatActivity() {
         MemoViewModelFactory((application as MemosApplication).repository)
     }
     private var isDrawingEnabled = false
+    private lateinit var imageButtonCurrentPaint: ImageButton
+    private lateinit var linearLayoutPaintColors: LinearLayout
+    private lateinit var brushDialog: Dialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,8 +47,12 @@ class NewMemoActivity : AppCompatActivity() {
         val folderId = sharedPref.getInt("lastSelectedFolderId", -1)
         val drawBottomAppbar = findViewById<BottomAppBar>(R.id.drawBottomAppbar)
 
+        brushDialog = Dialog(this)
+        brushDialog.setContentView(R.layout.dialog_brush_size)
+        linearLayoutPaintColors = brushDialog.findViewById(R.id.ll_paint_colors)
         editTitle = findViewById(R.id.et_title)
         editContent = findViewById(R.id.et_content)
+        drawingView = findViewById(R.id.drawingView)
 
         val button = findViewById<ImageView>(R.id.btn_save)
         button.setOnClickListener {
@@ -63,12 +72,12 @@ class NewMemoActivity : AppCompatActivity() {
             when (menuItem.itemId) {
                 R.id.drawMode -> {
                     // 버튼을 클릭했을 때 그림 그리는 기능을 활성화/비활성화
-                    drawingView = findViewById(R.id.drawingView)
+
                     isDrawingEnabled = !isDrawingEnabled
                     if (isDrawingEnabled) {
-                        drawingView?.enableDrawing()
+                        drawingView.enableDrawing()
                     } else {
-                        drawingView?.disableDrawing()
+                        drawingView.disableDrawing()
                     }
                     true
                 }
@@ -85,18 +94,20 @@ class NewMemoActivity : AppCompatActivity() {
 
     // Brush 크기를 조절하는 Dialog
     private fun showBrushSizeChooserDialog() {
-        val brushDialog = Dialog(this)
-        brushDialog.setContentView(R.layout.dialog_brush_size)
         val brushSeekBar = brushDialog.findViewById<SeekBar>(R.id.brushSeekBar)
         val brushSizeText = brushDialog.findViewById<TextView>(R.id.brushSizeText)
+        imageButtonCurrentPaint = linearLayoutPaintColors[1] as ImageButton
+        imageButtonCurrentPaint.setImageDrawable(
+            ContextCompat.getDrawable(this, R.drawable.pallet_pressed)
+        )
 
-        val currentBrushSize = drawingView?.brushSize ?: 3.0.toFloat()  // null 이면 초기값 3으로 설정
+        val currentBrushSize = drawingView.brushSize // null 이면 초기값 3으로 설정
         brushSeekBar.progress = currentBrushSize.toInt()    // SeekBar의 progress
         brushSizeText.text = brushSeekBar.progress.toString()   // SeekBar의 progress 표현
 
-        brushSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+        brushSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                drawingView?.setSizeForBrush(progress.toFloat())
+                drawingView.setSizeForBrush(progress.toFloat())
                 brushSizeText.text = "$progress"
             }
 
@@ -111,5 +122,26 @@ class NewMemoActivity : AppCompatActivity() {
         })
         brushDialog.setTitle("Brush size: ")
         brushDialog.show()
+    }
+
+    fun paintClicked(view: View) {
+        if (view !== imageButtonCurrentPaint) {
+            // 색 업데이트
+            val imageButton = view as ImageButton
+            // tag는 현재 색상을 이전 색상으로 바꾸는 데 사용된다.
+            val colorTag = imageButton.tag.toString()
+            drawingView.setColor(colorTag)
+            // 마지막 활성 이미지 버튼과 현재 활성 이미지 버튼의 배경을 바꿉니다.
+            imageButton.setImageDrawable(
+                ContextCompat.getDrawable(this, R.drawable.pallet_pressed)
+            )
+
+            imageButtonCurrentPaint.setImageDrawable(
+                ContextCompat.getDrawable(this, R.drawable.pallet_normal)
+            )
+
+            // 현재 뷰는 ImageButton 형태로 선택된 뷰로 업데이트됩니다.
+            imageButtonCurrentPaint = view
+        }
     }
 }
