@@ -87,6 +87,11 @@ class NewMemoActivity : AppCompatActivity() {
                     true
                 }
 
+                R.id.undo -> {
+                    drawingView.onClickUndo()
+                    true
+                }
+
                 else -> false
             }
         }

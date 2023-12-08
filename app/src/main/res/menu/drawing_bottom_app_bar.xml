@@ -3,13 +3,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/drawMode"
-        android:title="그림모드"
         android:icon="@drawable/ic_draw"
-        app:showAsAction="always"/>
+        android:title="그림모드"
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/brushSize"
-        android:title="두께조절"
         android:icon="@drawable/ic_brush_size"
-        app:showAsAction="always"/>
+        android:title="두께조절"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/undo"
+        android:icon="@drawable/ic_undo"
+        android:title="실행취소"
+        app:showAsAction="always" />
 </menu>
