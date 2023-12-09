@@ -3,13 +3,20 @@ package eu.tutorials.mymemo.activity
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableString
 import android.text.TextUtils
+import android.text.style.AbsoluteSizeSpan
+import android.view.Menu
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.SeekBar
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -41,6 +48,7 @@ class NewMemoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_new_memo)
+        setSupportActionBar(findViewById(R.id.drawBottomAppbar))
 
         // MainActivity로부터 folderId 읽기
         val sharedPref = getSharedPreferences("MemosApplication", Context.MODE_PRIVATE)
@@ -148,5 +156,44 @@ class NewMemoActivity : AppCompatActivity() {
             // 현재 뷰는 ImageButton 형태로 선택된 뷰로 업데이트됩니다.
             imageButtonCurrentPaint = view
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.drawing_bottom_app_bar, menu)
+
+        val textSizeSpinnerItem = menu?.findItem(R.id.textSize)
+        val textSizeSpinner = textSizeSpinnerItem?.actionView as Spinner
+        val textSizeOptions = arrayOf("12", "13", "14", "15")
+
+        val adapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_item, textSizeOptions)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        textSizeSpinner.adapter = adapter
+
+
+        textSizeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                val selectedSize = textSizeOptions[position].toInt()
+                val spannable = SpannableString(editContent.text)
+                spannable.setSpan(
+                    AbsoluteSizeSpan(selectedSize, true),
+                    editContent.selectionStart,
+                    editContent.selectionEnd,
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                editContent.setText(spannable, TextView.BufferType.SPANNABLE)
+                editContent.setSelection(editContent.text.length)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+
+            }
+        }
+
+        return true
     }
 }

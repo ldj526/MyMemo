@@ -18,4 +18,11 @@
         android:icon="@drawable/ic_undo"
         android:title="실행취소"
         app:showAsAction="always" />
+
+    <item
+        android:id="@+id/textSize"
+        android:title="글자 크기"
+        app:actionViewClass="android.widget.Spinner"
+        app:showAsAction="always" />
+
 </menu>
