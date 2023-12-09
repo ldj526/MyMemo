@@ -25,4 +25,9 @@
         app:actionViewClass="android.widget.Spinner"
         app:showAsAction="always" />
 
+    <item
+        android:id="@+id/textStyle"
+        android:icon="@drawable/ic_text_style"
+        android:title="글자 스타일"
+        app:showAsAction="always" />
 </menu>

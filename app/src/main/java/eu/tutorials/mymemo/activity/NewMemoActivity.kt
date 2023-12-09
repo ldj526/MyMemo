@@ -2,11 +2,17 @@ package eu.tutorials.mymemo.activity
 
 import android.app.Dialog
 import android.content.Context
+import android.graphics.Typeface
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
+import android.text.Spanned
 import android.text.TextUtils
 import android.text.style.AbsoluteSizeSpan
+import android.text.style.CharacterStyle
+import android.text.style.StrikethroughSpan
+import android.text.style.StyleSpan
+import android.text.style.UnderlineSpan
 import android.view.Menu
 import android.view.View
 import android.widget.AdapterView
@@ -44,6 +50,14 @@ class NewMemoActivity : AppCompatActivity() {
     private lateinit var imageButtonCurrentPaint: ImageButton
     private lateinit var linearLayoutPaintColors: LinearLayout
     private lateinit var brushDialog: Dialog
+
+    var isUnderlineApplied = false
+    var isStrikethroughApplied = false
+    var isBoldApplied = false
+    var isItalicApplied = false
+
+    private var selectionStart: Int = 0
+    private var selectionEnd: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,8 +114,104 @@ class NewMemoActivity : AppCompatActivity() {
                     true
                 }
 
+                R.id.textStyle -> {
+                    showTextStyleChooserDialog()
+                    true
+                }
+
                 else -> false
             }
+        }
+    }
+
+    // textStyle을 변경하기 위해 띄워주는 Dialog
+    private fun showTextStyleChooserDialog() {
+        val textDialog = Dialog(this)
+        textDialog.setContentView(R.layout.dialog_text_style)
+        textDialog.setTitle("Text Style")
+        textDialog.show()
+    }
+
+    fun styleClicked(view: View) {
+        // 스타일 업데이트
+        val styleImageButton = view as ImageButton
+        val styleTag = styleImageButton.tag.toString()
+        when (styleTag) {
+            "bold" -> {
+                isBoldApplied = !isBoldApplied
+                updateStyleImage(styleImageButton, isBoldApplied)
+            }
+
+            "italic" -> {
+                isItalicApplied = !isItalicApplied
+                updateStyleImage(styleImageButton, isItalicApplied)
+            }
+
+            "underline" -> {
+                isUnderlineApplied = !isUnderlineApplied
+                updateStyleImage(styleImageButton, isUnderlineApplied)
+            }
+
+            "strikethrough" -> {
+                isStrikethroughApplied = !isStrikethroughApplied
+                updateStyleImage(styleImageButton, isStrikethroughApplied)
+            }
+        }
+        applyTextStyle()
+    }
+
+    // dialog에서 각 이미지의 view 설정
+    fun updateStyleImage(button: ImageButton, isStyleApplied: Boolean) {
+        if (isStyleApplied) {
+            button.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.pallet_pressed))
+        } else {
+            button.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.pallet_normal))
+        }
+    }
+
+    // 텍스트 스타일 적용 함수
+    fun applyTextStyle() {
+        val spannableString = SpannableString(editContent.text)
+        val start = editContent.selectionStart
+        val end = editContent.selectionEnd
+        // 굵게 스타일 적용 또는 해제
+        updateStyleSpan(spannableString, Typeface.BOLD, isBoldApplied, start, end)
+
+        // 기울임꼴 스타일 적용 또는 해제
+        updateStyleSpan(spannableString, Typeface.ITALIC, isItalicApplied, start, end)
+
+        // 밑줄 스타일 적용 또는 해제
+        updateSpan(spannableString, UnderlineSpan(), isUnderlineApplied, start, end)
+
+        // 취소선 스타일 적용 또는 해제
+        updateSpan(spannableString, StrikethroughSpan(), isStrikethroughApplied, start, end)
+
+        editContent.setText(spannableString)
+        editContent.setSelection(start, end)
+    }
+
+    // styleSpan에 따라 변경
+    fun updateStyleSpan(spannable: SpannableString, style: Int, isApplied: Boolean, start: Int, end: Int) {
+        val existingSpans = spannable.getSpans(start, end, StyleSpan::class.java)
+        existingSpans.forEach {
+            if (it.style == style) {
+                spannable.removeSpan(it)
+            }
+        }
+
+        if (isApplied) {
+            spannable.setSpan(StyleSpan(style), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+    }
+
+    // CharacterStyle에 따라 변경
+    fun <T : CharacterStyle> updateSpan(spannable: SpannableString, span: T, isApplied: Boolean, start: Int, end: Int) {
+        spannable.getSpans(start, end, span::class.java).forEach {
+            spannable.removeSpan(it)
+        }
+
+        if (isApplied) {
+            spannable.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
     }
 
@@ -179,14 +289,16 @@ class NewMemoActivity : AppCompatActivity() {
                 id: Long
             ) {
                 val selectedSize = textSizeOptions[position].toInt()
+                // 글자 크기 바꿔주는 기능
                 val spannable = SpannableString(editContent.text)
                 spannable.setSpan(
                     AbsoluteSizeSpan(selectedSize, true),
                     editContent.selectionStart,
                     editContent.selectionEnd,
-                    Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
                 editContent.setText(spannable, TextView.BufferType.SPANNABLE)
-                editContent.setSelection(editContent.text.length)
+                editContent.setSelection(editContent.selectionStart, editContent.selectionEnd)
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
