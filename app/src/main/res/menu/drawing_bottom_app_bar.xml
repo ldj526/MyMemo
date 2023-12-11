@@ -30,4 +30,10 @@
         android:icon="@drawable/ic_text_style"
         android:title="글자 스타일"
         app:showAsAction="always" />
+
+    <item
+        android:id="@+id/textAlign"
+        android:icon="@drawable/ic_text_align"
+        android:title="글자 정렬"
+        app:showAsAction="always" />
 </menu>
