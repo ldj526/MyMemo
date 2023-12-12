@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/textMode"
+        android:icon="@drawable/ic_keyboard"
+        android:title="글씨모드"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/brushSize"
+        android:icon="@drawable/ic_brush_size"
+        android:title="두께조절"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/undo"
+        android:icon="@drawable/ic_undo"
+        android:title="실행취소"
+        app:showAsAction="always" />
+</menu>

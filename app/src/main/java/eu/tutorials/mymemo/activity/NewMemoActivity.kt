@@ -15,6 +15,7 @@ import android.text.style.CharacterStyle
 import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
 import android.text.style.UnderlineSpan
+import android.util.Log
 import android.view.Menu
 import android.view.View
 import android.widget.AdapterView
@@ -48,7 +49,6 @@ class NewMemoActivity : AppCompatActivity() {
     private val memoViewModel: MemoViewModel by viewModels() {
         MemoViewModelFactory((application as MemosApplication).repository)
     }
-    private var isDrawingEnabled = false
     private lateinit var imageButtonCurrentPaint: ImageButton
     private lateinit var linearLayoutPaintColors: LinearLayout
     private lateinit var brushDialog: Dialog
@@ -66,11 +66,13 @@ class NewMemoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_new_memo)
         setSupportActionBar(findViewById(R.id.drawBottomAppbar))
+        setSupportActionBar(findViewById(R.id.textBottomAppbar))
 
         // MainActivity로부터 folderId 읽기
         val sharedPref = getSharedPreferences("MemosApplication", Context.MODE_PRIVATE)
         val folderId = sharedPref.getInt("lastSelectedFolderId", -1)
         val drawBottomAppbar = findViewById<BottomAppBar>(R.id.drawBottomAppbar)
+        val textBottomAppbar = findViewById<BottomAppBar>(R.id.textBottomAppbar)
 
         brushDialog = Dialog(this)
         textAlignDialog = Dialog(this)
@@ -102,17 +104,6 @@ class NewMemoActivity : AppCompatActivity() {
 
         drawBottomAppbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.drawMode -> {
-                    // 버튼을 클릭했을 때 그림 그리는 기능을 활성화/비활성화
-
-                    isDrawingEnabled = !isDrawingEnabled
-                    if (isDrawingEnabled) {
-                        drawingView.enableDrawing()
-                    } else {
-                        drawingView.disableDrawing()
-                    }
-                    true
-                }
 
                 R.id.brushSize -> {
                     showBrushSizeChooserDialog()
@@ -121,6 +112,26 @@ class NewMemoActivity : AppCompatActivity() {
 
                 R.id.undo -> {
                     drawingView.onClickUndo()
+                    true
+                }
+
+                R.id.textMode -> {
+                    textBottomAppbar.visibility = View.VISIBLE
+                    drawBottomAppbar.visibility = View.GONE
+                    drawingView.disableDrawing()
+                    true
+                }
+
+                else -> false
+            }
+        }
+
+        textBottomAppbar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.drawMode -> {
+                    drawingView.enableDrawing()
+                    drawBottomAppbar.visibility = View.VISIBLE
+                    textBottomAppbar.visibility = View.GONE
                     true
                 }
 
@@ -399,7 +410,7 @@ class NewMemoActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.drawing_bottom_app_bar, menu)
+        menuInflater.inflate(R.menu.text_bottom_app_bar_menu, menu)
 
         val textSizeSpinnerItem = menu?.findItem(R.id.textSize)
         val textSizeSpinner = textSizeSpinnerItem?.actionView as Spinner

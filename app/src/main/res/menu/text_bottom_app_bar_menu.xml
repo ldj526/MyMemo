@@ -8,18 +8,6 @@
         app:showAsAction="always" />
 
     <item
-        android:id="@+id/brushSize"
-        android:icon="@drawable/ic_brush_size"
-        android:title="두께조절"
-        app:showAsAction="always" />
-
-    <item
-        android:id="@+id/undo"
-        android:icon="@drawable/ic_undo"
-        android:title="실행취소"
-        app:showAsAction="always" />
-
-    <item
         android:id="@+id/textSize"
         android:title="글자 크기"
         app:actionViewClass="android.widget.Spinner"
