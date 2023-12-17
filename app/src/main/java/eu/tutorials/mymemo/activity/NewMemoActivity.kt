@@ -4,16 +4,13 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.Typeface
 import android.os.Bundle
-import android.text.Layout
 import android.text.Spannable
 import android.text.SpannableString
-import android.text.Spanned
 import android.text.TextUtils
 import android.text.style.AbsoluteSizeSpan
-import android.text.style.AlignmentSpan
-import android.text.style.CharacterStyle
 import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
+import android.text.style.TypefaceSpan
 import android.text.style.UnderlineSpan
 import android.util.Log
 import android.view.Menu
@@ -39,13 +36,18 @@ import eu.tutorials.mymemo.MemosApplication
 import eu.tutorials.mymemo.R
 import eu.tutorials.mymemo.draw.DrawingView
 import eu.tutorials.mymemo.model.Memo
+import eu.tutorials.mymemo.textattribute.CustomEditText
+import eu.tutorials.mymemo.textattribute.TextAlignmentManager
+import eu.tutorials.mymemo.textattribute.TextSizeManager
+import eu.tutorials.mymemo.textattribute.TextStyleManager
+import java.lang.reflect.Type
 
 class NewMemoActivity : AppCompatActivity() {
 
     private lateinit var drawingView: DrawingView
 
     private lateinit var editTitle: EditText
-    private lateinit var editContent: EditText
+    private lateinit var editContent: CustomEditText
     private val memoViewModel: MemoViewModel by viewModels() {
         MemoViewModelFactory((application as MemosApplication).repository)
     }
@@ -57,6 +59,14 @@ class NewMemoActivity : AppCompatActivity() {
     private lateinit var linearLayoutTextAlign: LinearLayout
     private lateinit var textAlignDialog: Dialog
 
+    private lateinit var textAlignmentManager: TextAlignmentManager
+    private lateinit var textStyleManager: TextStyleManager
+    private lateinit var textSizeManager: TextSizeManager
+
+    private lateinit var linearLayoutTextStyle: LinearLayout
+    private lateinit var textStyleDialog: Dialog
+
+    private var isSpinnerSelectionChanged = false
     var isUnderlineApplied = false
     var isStrikethroughApplied = false
     var isBoldApplied = false
@@ -74,18 +84,21 @@ class NewMemoActivity : AppCompatActivity() {
         val drawBottomAppbar = findViewById<BottomAppBar>(R.id.drawBottomAppbar)
         val textBottomAppbar = findViewById<BottomAppBar>(R.id.textBottomAppbar)
 
+        editContent = findViewById(R.id.et_content)
         brushDialog = Dialog(this)
         textAlignDialog = Dialog(this)
+        textStyleDialog = Dialog(this)
         brushDialog.setContentView(R.layout.dialog_brush_size)
         textAlignDialog.setContentView(R.layout.dialog_text_align)
+        textStyleDialog.setContentView(R.layout.dialog_text_style)
         linearLayoutPaintColors = brushDialog.findViewById(R.id.ll_paint_colors)
         linearLayoutTextAlign = textAlignDialog.findViewById(R.id.ll_text_align)
+        linearLayoutTextStyle = textStyleDialog.findViewById(R.id.ll_text_style)
         editTitle = findViewById(R.id.et_title)
-        editContent = findViewById(R.id.et_content)
         drawingView = findViewById(R.id.drawingView)
 
-        val button = findViewById<ImageView>(R.id.btn_save)
-        button.setOnClickListener {
+        val saveButton = findViewById<ImageView>(R.id.btn_save)
+        saveButton.setOnClickListener {
             val title = editTitle.text.toString()
             val content = editContent.text.toString()
             if (TextUtils.isEmpty(title) || TextUtils.isEmpty(content)) {
@@ -101,6 +114,10 @@ class NewMemoActivity : AppCompatActivity() {
         imageButtonCurrentAlign.setImageDrawable(
             ContextCompat.getDrawable(this, R.drawable.pallet_pressed)
         )
+        textAlignmentManager =
+            TextAlignmentManager(editContent, imageButtonCurrentAlign, this, textAlignDialog)
+        textStyleManager = TextStyleManager(editContent, this, textStyleDialog)
+        textSizeManager = TextSizeManager(editContent)
 
         drawBottomAppbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
@@ -136,12 +153,12 @@ class NewMemoActivity : AppCompatActivity() {
                 }
 
                 R.id.textStyle -> {
-                    showTextStyleChooserDialog()
+                    textStyleManager.showTextStyleChooserDialog(linearLayoutTextStyle)
                     true
                 }
 
                 R.id.textAlign -> {
-                    showTextAlignChooserDialog()
+                    textAlignmentManager.showTextAlignChooserDialog(linearLayoutTextAlign)
                     true
                 }
 
@@ -151,36 +168,6 @@ class NewMemoActivity : AppCompatActivity() {
 
     }
 
-    // 정렬을 위한 Dialog 띄우기
-    private fun showTextAlignChooserDialog() {
-        // 적용된 정렬을 가져와 image에 표시해주기 위함
-        val spannableString = SpannableString(editContent.text)
-        val selectionStart = editContent.selectionStart
-        val selectionEnd = editContent.selectionEnd
-        val alignmentSpan =
-            spannableString.getSpans(selectionStart, selectionEnd, AlignmentSpan::class.java)
-                .firstOrNull()
-        val alignButtonIndex = when (alignmentSpan?.alignment) {
-            Layout.Alignment.ALIGN_NORMAL -> 0  // 왼쪽 정렬
-            Layout.Alignment.ALIGN_CENTER -> 1 // 가운데 정렬
-            Layout.Alignment.ALIGN_OPPOSITE -> 2 // 오른쪽 정렬
-            else -> 0 // 기본 정렬
-        }
-
-        // 이전에 선택된 버튼의 상태를 초기화
-        imageButtonCurrentAlign.setImageDrawable(
-            ContextCompat.getDrawable(this, R.drawable.pallet_normal)
-        )
-
-        // 새로운 정렬 상태에 따른 버튼 설정
-        imageButtonCurrentAlign = linearLayoutTextAlign[alignButtonIndex] as ImageButton
-        imageButtonCurrentAlign.setImageDrawable(
-            ContextCompat.getDrawable(this, R.drawable.pallet_pressed)
-        )
-        textAlignDialog.setTitle("Text Align: ")
-        textAlignDialog.show()
-    }
-
     // 정렬 이미지를 클릭했을 때
     fun textAlignClicked(view: View) {
         if (view !== imageButtonCurrentAlign) {
@@ -188,7 +175,8 @@ class NewMemoActivity : AppCompatActivity() {
             val imageButton = view as ImageButton
             // tag는 현재 정렬을 이전 정렬로 바꾸는 데 사용된다.
             val alignTag = imageButton.tag.toString()
-            setAlign(alignTag)
+            Log.d("AlignTest", "alignTag: $alignTag")
+            textAlignmentManager.setAlign(alignTag)
             // 마지막 활성 이미지 버튼과 현재 활성 이미지 버튼의 배경을 바꿉니다.
             imageButton.setImageDrawable(
                 ContextCompat.getDrawable(this, R.drawable.pallet_pressed)
@@ -203,64 +191,6 @@ class NewMemoActivity : AppCompatActivity() {
         }
     }
 
-    // 정렬 Tag를 받아 Layout.Alignment로 변경
-    fun setAlign(alignTag: String) {
-        val alignment = when (alignTag) {
-            "start" -> Layout.Alignment.ALIGN_NORMAL    // 왼쪽 정렬
-            "center" -> Layout.Alignment.ALIGN_CENTER   // 가운데 정렬
-            "end" -> Layout.Alignment.ALIGN_OPPOSITE    // 오른쪽 정렬
-            else -> Layout.Alignment.ALIGN_NORMAL   // 기본 정렬
-        }
-        applyTextAlignment(alignment)
-    }
-
-    // 선택된 곳 정렬 해주기
-    fun applyTextAlignment(alignment: Layout.Alignment) {
-        val spannableString = SpannableString(editContent.text)
-        val selectionStart = editContent.selectionStart
-        val selectionEnd = editContent.selectionEnd
-
-        val start: Int
-        val end: Int
-
-        if (selectionStart < selectionEnd) {
-            // 텍스트가 선택된 경우
-            start = selectionStart
-            end = selectionEnd
-        } else {
-            // 텍스트가 선택되지 않은 경우 커서 위치의 줄 찾기
-            val layout = editContent.layout
-            val line = layout.getLineForOffset(selectionStart)
-            start = layout.getLineStart(line)
-            end = layout.getLineEnd(line)
-        }
-
-        // 해당 범위에 적용된 기존 정렬 스팬 제거
-        val alignmentSpans = spannableString.getSpans(start, end, AlignmentSpan::class.java)
-        for (span in alignmentSpans) {
-            spannableString.removeSpan(span)
-        }
-
-        // 해당 범위에 정렬 스팬 적용
-        spannableString.setSpan(
-            AlignmentSpan.Standard(alignment),
-            start,
-            end,
-            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
-
-        editContent.setText(spannableString)
-        editContent.setSelection(selectionStart, selectionEnd)
-    }
-
-    // textStyle을 변경하기 위해 띄워주는 Dialog
-    private fun showTextStyleChooserDialog() {
-        val textDialog = Dialog(this)
-        textDialog.setContentView(R.layout.dialog_text_style)
-        textDialog.setTitle("Text Style")
-        textDialog.show()
-    }
-
     fun styleClicked(view: View) {
         // 스타일 업데이트
         val styleImageButton = view as ImageButton
@@ -268,92 +198,34 @@ class NewMemoActivity : AppCompatActivity() {
         when (styleTag) {
             "bold" -> {
                 isBoldApplied = !isBoldApplied
-                updateStyleImage(styleImageButton, isBoldApplied)
+                textStyleManager.updateStyleImage(styleImageButton, isBoldApplied)
+                textStyleManager.updateStyleSpan(Typeface.BOLD, isBoldApplied)
             }
 
             "italic" -> {
                 isItalicApplied = !isItalicApplied
-                updateStyleImage(styleImageButton, isItalicApplied)
+                textStyleManager.updateStyleImage(styleImageButton, isItalicApplied)
+                textStyleManager.updateStyleSpan(Typeface.ITALIC, isItalicApplied)
             }
 
             "underline" -> {
                 isUnderlineApplied = !isUnderlineApplied
-                updateStyleImage(styleImageButton, isUnderlineApplied)
+                textStyleManager.updateStyleImage(styleImageButton, isUnderlineApplied)
+                textStyleManager.updateSpan(UnderlineSpan(), isUnderlineApplied)
             }
 
             "strikethrough" -> {
                 isStrikethroughApplied = !isStrikethroughApplied
-                updateStyleImage(styleImageButton, isStrikethroughApplied)
+                textStyleManager.updateStyleImage(styleImageButton, isStrikethroughApplied)
+                textStyleManager.updateSpan(StrikethroughSpan(), isStrikethroughApplied)
             }
         }
-        applyTextStyle()
-    }
-
-    // dialog에서 각 이미지의 view 설정
-    fun updateStyleImage(button: ImageButton, isStyleApplied: Boolean) {
-        if (isStyleApplied) {
-            button.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.pallet_pressed))
-        } else {
-            button.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.pallet_normal))
-        }
-    }
-
-    // 텍스트 스타일 적용 함수
-    fun applyTextStyle() {
-        val spannableString = SpannableString(editContent.text)
-        val start = editContent.selectionStart
-        val end = editContent.selectionEnd
-        // 굵게 스타일 적용 또는 해제
-        updateStyleSpan(spannableString, Typeface.BOLD, isBoldApplied, start, end)
-
-        // 기울임꼴 스타일 적용 또는 해제
-        updateStyleSpan(spannableString, Typeface.ITALIC, isItalicApplied, start, end)
-
-        // 밑줄 스타일 적용 또는 해제
-        updateSpan(spannableString, UnderlineSpan(), isUnderlineApplied, start, end)
-
-        // 취소선 스타일 적용 또는 해제
-        updateSpan(spannableString, StrikethroughSpan(), isStrikethroughApplied, start, end)
-
-        editContent.setText(spannableString)
-        editContent.setSelection(start, end)
-    }
-
-    // styleSpan에 따라 변경
-    fun updateStyleSpan(
-        spannable: SpannableString,
-        style: Int,
-        isApplied: Boolean,
-        start: Int,
-        end: Int
-    ) {
-        val existingSpans = spannable.getSpans(start, end, StyleSpan::class.java)
-        existingSpans.forEach {
-            if (it.style == style) {
-                spannable.removeSpan(it)
-            }
-        }
-
-        if (isApplied) {
-            spannable.setSpan(StyleSpan(style), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-    }
-
-    // CharacterStyle에 따라 변경
-    fun <T : CharacterStyle> updateSpan(
-        spannable: SpannableString,
-        span: T,
-        isApplied: Boolean,
-        start: Int,
-        end: Int
-    ) {
-        spannable.getSpans(start, end, span::class.java).forEach {
-            spannable.removeSpan(it)
-        }
-
-        if (isApplied) {
-            spannable.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
+//        textStyleManager.applyTextStyle(
+//            isBoldApplied,
+//            isItalicApplied,
+//            isUnderlineApplied,
+//            isStrikethroughApplied
+//        )
     }
 
     // Brush 크기를 조절하는 Dialog
@@ -414,14 +286,23 @@ class NewMemoActivity : AppCompatActivity() {
 
         val textSizeSpinnerItem = menu?.findItem(R.id.textSize)
         val textSizeSpinner = textSizeSpinnerItem?.actionView as Spinner
-        val textSizeOptions = arrayOf("12", "13", "14", "15")
+        val textSizeOptions = arrayOf("12", "13", "14", "15", "16", "17", "18", "19", "20")
 
         val adapter =
             ArrayAdapter(this, android.R.layout.simple_spinner_item, textSizeOptions)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         textSizeSpinner.adapter = adapter
 
+        textSizeSpinner.setSelection(3, false)
 
+        editContent.selectionChangedListener = {
+            if (!isSpinnerSelectionChanged) {
+                textSizeManager.updateSpinnerSelectionBasedOnTextSize(
+                    textSizeSpinner,
+                    textSizeOptions
+                )
+            }
+        }
         textSizeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: AdapterView<*>?,
@@ -429,17 +310,44 @@ class NewMemoActivity : AppCompatActivity() {
                 position: Int,
                 id: Long
             ) {
+                isSpinnerSelectionChanged = true
                 val selectedSize = textSizeOptions[position].toInt()
-                // 글자 크기 바꿔주는 기능
+                val selectionStart = editContent.selectionStart
+                val selectionEnd = editContent.selectionEnd
+
+                // 선택 시작 및 끝 인덱스 순서 확인 및 조정
+                var (start, end) = if (selectionStart <= selectionEnd) {
+                    selectionStart to selectionEnd
+                } else {
+                    selectionEnd to selectionStart
+                }
+
+                if (start == end) {
+                    // 텍스트가 선택되지 않은 경우 커서 위치의 줄 찾기
+                    val layout = editContent.layout
+                    val line = layout.getLineForOffset(selectionStart)
+                    start = layout.getLineStart(line)
+                    end = layout.getLineEnd(line)
+                }
+
                 val spannable = SpannableString(editContent.text)
+                // 기존에 있는 span 제거
+                spannable.getSpans(start, end, AbsoluteSizeSpan::class.java).forEach {
+                    spannable.removeSpan(it)
+                }
+                // 글자 크기 바꿔주는 기능
                 spannable.setSpan(
                     AbsoluteSizeSpan(selectedSize, true),
-                    editContent.selectionStart,
-                    editContent.selectionEnd,
-                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                    start,
+                    end,
+                    Spannable.SPAN_INCLUSIVE_EXCLUSIVE
                 )
-                editContent.setText(spannable, TextView.BufferType.SPANNABLE)
-                editContent.setSelection(editContent.selectionStart, editContent.selectionEnd)
+                editContent.setText(
+                    spannable,
+                    TextView.BufferType.SPANNABLE
+                )   // 이 과정에서 커서 위치가 초기화된다.
+                editContent.setSelection(selectionStart, selectionEnd)
+                isSpinnerSelectionChanged = false
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
