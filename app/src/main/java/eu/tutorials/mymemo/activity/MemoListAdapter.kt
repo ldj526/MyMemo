@@ -1,10 +1,13 @@
 package eu.tutorials.mymemo.activity
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import eu.tutorials.mymemo.R
@@ -47,6 +50,7 @@ class MemoListAdapter :
         val title: TextView = itemView.findViewById(R.id.tv_title)
         val content: TextView = itemView.findViewById(R.id.tv_content)
         val date: TextView = itemView.findViewById(R.id.date)
+        val imageView: ImageView = itemView.findViewById(R.id.imageView)
 
         fun bind(memo: Memo) {
             id.text = memo.id.toString()
@@ -54,6 +58,11 @@ class MemoListAdapter :
             content.text = memo.content
             date.text = convertTimestampToDate(memo.date!!)
             checkBox.isChecked = memo.isChecked
+            val bitmap = loadBitmapFromInternalStorage(memo.imagePath!!)
+            // 저장되어 있는 drawing을 imageView에서 보여줌
+            bitmap?.let {
+                imageView.setImageBitmap(bitmap)
+            }
             checkBox.visibility =
                 if (showCheckBoxes) View.VISIBLE else View.GONE
             // Checkbox 상태 변화 check
@@ -73,6 +82,15 @@ class MemoListAdapter :
                 showCheckboxes()
                 true
             }
+        }
+    }
+
+    private fun loadBitmapFromInternalStorage(filePath: String): Bitmap? {
+        return try {
+            BitmapFactory.decodeFile(filePath)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 

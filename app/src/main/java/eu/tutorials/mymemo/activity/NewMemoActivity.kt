@@ -2,6 +2,10 @@ package eu.tutorials.mymemo.activity
 
 import android.app.Dialog
 import android.content.Context
+import android.content.ContextWrapper
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.text.Spannable
@@ -29,6 +33,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
+import androidx.room.TypeConverter
 import com.google.android.material.bottomappbar.BottomAppBar
 import eu.tutorials.mymemo.MemoViewModel
 import eu.tutorials.mymemo.MemoViewModelFactory
@@ -40,6 +45,11 @@ import eu.tutorials.mymemo.textattribute.CustomEditText
 import eu.tutorials.mymemo.textattribute.TextAlignmentManager
 import eu.tutorials.mymemo.textattribute.TextSizeManager
 import eu.tutorials.mymemo.textattribute.TextStyleManager
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
 import java.lang.reflect.Type
 
 class NewMemoActivity : AppCompatActivity() {
@@ -105,7 +115,8 @@ class NewMemoActivity : AppCompatActivity() {
                 Toast.makeText(applicationContext, "제목과 내용을 입력해주세요.", Toast.LENGTH_LONG).show()
             } else {
                 val timeStamp = System.currentTimeMillis()
-                val memo = Memo(null, title, content, timeStamp, false, folderId)
+                val bitmap = getBitmapFromView(drawingView)
+                val memo = Memo(null, title, content, timeStamp, false, folderId, saveBitmapToFileInternalStorage(bitmap, timeStamp))
                 memoViewModel.insert(memo)
                 finish()
             }
@@ -220,12 +231,6 @@ class NewMemoActivity : AppCompatActivity() {
                 textStyleManager.updateSpan(StrikethroughSpan(), isStrikethroughApplied)
             }
         }
-//        textStyleManager.applyTextStyle(
-//            isBoldApplied,
-//            isItalicApplied,
-//            isUnderlineApplied,
-//            isStrikethroughApplied
-//        )
     }
 
     // Brush 크기를 조절하는 Dialog
@@ -279,6 +284,44 @@ class NewMemoActivity : AppCompatActivity() {
             // 현재 뷰는 ImageButton 형태로 선택된 뷰로 업데이트됩니다.
             imageButtonCurrentPaint = view
         }
+    }
+
+    // 내부 저장소에 저장
+    private fun saveBitmapToFileInternalStorage(bitmap: Bitmap, timeStamp: Long): String {
+        val contextWrapper = ContextWrapper(this)
+        // 내부 저장소의 디렉토리를 참조
+        val directory = contextWrapper.getDir("imageDir", Context.MODE_PRIVATE)
+        // 파일 객체 생성
+        val file = File(directory, "$timeStamp.png")
+
+        try {
+            val stream: OutputStream = FileOutputStream(file)
+            // 비트맵을 PNG 형식으로 압축 및 저장
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            stream.flush()
+            stream.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
+        // 저장된 파일의 절대 경로 반환
+        return file.absolutePath
+    }
+
+    // View로부터 Bitmap 얻기
+    private fun getBitmapFromView(view: View): Bitmap {
+        // view 와 동일한 크기의 Bitmap 생성
+        val returnedBitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(returnedBitmap)
+
+        val bgDrawable = view.background
+        if (bgDrawable != null) {
+            bgDrawable.draw(canvas)
+        } else {
+            canvas.drawColor(Color.WHITE)
+        }
+        view.draw(canvas)
+        return returnedBitmap
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

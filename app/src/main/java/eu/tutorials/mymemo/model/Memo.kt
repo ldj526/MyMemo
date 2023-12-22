@@ -1,5 +1,6 @@
 package eu.tutorials.mymemo.model
 
+import android.graphics.Bitmap
 import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -20,5 +21,7 @@ data class Memo(
     @ColumnInfo(name = "check")
     var isChecked: Boolean = false,
     @ColumnInfo(name = "folderId")
-    var folderId: Int? = null
+    var folderId: Int? = null,
+    @ColumnInfo(name = "imagePath")
+    val imagePath: String?
 ) : Parcelable

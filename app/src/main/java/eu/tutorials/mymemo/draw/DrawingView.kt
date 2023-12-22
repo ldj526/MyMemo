@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.AttributeSet
+import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
@@ -29,6 +30,14 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         setUpDrawing()
     }
 
+    fun setBitmap(bitmap: Bitmap) {
+        Log.d("DrawingView", "setBitmap에서 bitmap: $bitmap")
+        canvasBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+        Log.d("DrawingView", "setBitmap에서 canvasBitmap: $canvasBitmap")
+        canvas = Canvas(canvasBitmap!!)
+        invalidate() // View를 다시 그리도록 요청
+    }
+
     private fun setUpDrawing() {
         drawPaint = Paint()
         drawPath = CustomPath(color, brushSize)
@@ -49,16 +58,18 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        canvas.drawBitmap(canvasBitmap!!, 0f, 0f, canvasPaint)
+        canvasBitmap?.let {
+            canvas.drawBitmap(it, 0f, 0f, canvasPaint)
+        }
         for (path in paths) {      // 그린 내용들을 저장하는 기능
             drawPaint!!.strokeWidth = path.brushThickness
             drawPaint!!.color = path.color
             canvas.drawPath(path, drawPaint!!)
         }
-        if (!drawPath!!.isEmpty) {
-            drawPaint!!.strokeWidth = drawPath!!.brushThickness
-            drawPaint!!.color = drawPath!!.color
-            canvas.drawPath(drawPath!!, drawPaint!!)
+        drawPath?.let {
+            drawPaint!!.strokeWidth = it.brushThickness
+            drawPaint!!.color = it.color
+            canvas.drawPath(it, drawPaint!!)
         }
     }
 
