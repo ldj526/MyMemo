@@ -19,7 +19,7 @@
             android:layout_height="25dp"
             android:layout_margin="2dp"
             android:background="@drawable/ic_bold"
-            android:onClick="styleClicked"
+            android:onClick="onStyleClicked"
             android:src="@drawable/pallet_normal"
             android:tag="bold" />
 
@@ -28,7 +28,7 @@
             android:layout_height="25dp"
             android:layout_margin="2dp"
             android:background="@drawable/ic_italic"
-            android:onClick="styleClicked"
+            android:onClick="onStyleClicked"
             android:src="@drawable/pallet_normal"
             android:tag="italic" />
 
@@ -37,7 +37,7 @@
             android:layout_height="25dp"
             android:layout_margin="2dp"
             android:background="@drawable/ic_underline"
-            android:onClick="styleClicked"
+            android:onClick="onStyleClicked"
             android:src="@drawable/pallet_normal"
             android:tag="underline" />
 
@@ -46,7 +46,7 @@
             android:layout_height="25dp"
             android:layout_margin="2dp"
             android:background="@drawable/ic_strikethrough"
-            android:onClick="styleClicked"
+            android:onClick="onStyleClicked"
             android:src="@drawable/pallet_normal"
             android:tag="strikethrough" />
     </LinearLayout>

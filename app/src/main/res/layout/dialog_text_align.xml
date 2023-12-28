@@ -19,7 +19,7 @@
             android:layout_height="25dp"
             android:layout_margin="2dp"
             android:background="@drawable/ic_text_align_left"
-            android:onClick="textAlignClicked"
+            android:onClick="onTextAlignClicked"
             android:src="@drawable/pallet_normal"
             android:tag="start" />
 
@@ -28,7 +28,7 @@
             android:layout_height="25dp"
             android:layout_margin="2dp"
             android:background="@drawable/ic_text_align_center"
-            android:onClick="textAlignClicked"
+            android:onClick="onTextAlignClicked"
             android:src="@drawable/pallet_normal"
             android:tag="center" />
 
@@ -37,7 +37,7 @@
             android:layout_height="25dp"
             android:layout_margin="2dp"
             android:background="@drawable/ic_text_align_right"
-            android:onClick="textAlignClicked"
+            android:onClick="onTextAlignClicked"
             android:src="@drawable/pallet_normal"
             android:tag="end" />
     </LinearLayout>
