@@ -445,7 +445,7 @@ class MemoFragment : Fragment() {
         if (bgDrawable != null) {
             bgDrawable.draw(canvas)
         } else {
-            canvas.drawColor(Color.WHITE)
+            canvas.drawColor(Color.TRANSPARENT)
         }
         view.draw(canvas)
         return returnedBitmap

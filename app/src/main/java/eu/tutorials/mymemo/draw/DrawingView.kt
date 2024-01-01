@@ -31,9 +31,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     }
 
     fun setBitmap(bitmap: Bitmap) {
-        Log.d("DrawingView", "setBitmap에서 bitmap: $bitmap")
         canvasBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
-        Log.d("DrawingView", "setBitmap에서 canvasBitmap: $canvasBitmap")
         canvas = Canvas(canvasBitmap!!)
         invalidate() // View를 다시 그리도록 요청
     }
@@ -50,8 +48,10 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        canvasBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        canvas = Canvas(canvasBitmap!!)
+        if (canvasBitmap == null) {
+            canvasBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            canvas = Canvas(canvasBitmap!!)
+        }
     }
 
     // 그릴 때 호출되는 메서드

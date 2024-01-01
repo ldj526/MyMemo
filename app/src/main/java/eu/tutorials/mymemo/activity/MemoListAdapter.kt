@@ -61,7 +61,7 @@ class MemoListAdapter :
             val bitmap = loadBitmapFromInternalStorage(memo.imagePath!!)
             // 저장되어 있는 drawing을 imageView에서 보여줌
             bitmap?.let {
-                imageView.setImageBitmap(bitmap)
+                imageView.setImageBitmap(it)
             }
             checkBox.visibility =
                 if (showCheckBoxes) View.VISIBLE else View.GONE
