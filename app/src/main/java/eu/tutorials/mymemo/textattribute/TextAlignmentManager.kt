@@ -6,7 +6,6 @@ import android.text.Layout
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.AlignmentSpan
-import android.util.Log
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
@@ -45,7 +44,6 @@ class TextAlignmentManager(
         for (i in lineStart..lineEnd) {
             val alignmentSpan =
                 spannableString.getSpans(layout.getLineStart(i), layout.getLineEnd(i), AlignmentSpan::class.java).firstOrNull()?.alignment
-            Log.d("AlignTest", "layout.getLineStart(i): ${layout.getLineStart(i)}, layout.getLineEnd(i): ${layout.getLineEnd(i)}")
             if (i == lineStart) {
                 consistentAlignment = alignmentSpan
             } else if (alignmentSpan != consistentAlignment) {
@@ -64,7 +62,6 @@ class TextAlignmentManager(
         } else {
             0 // 기본 정렬 (왼쪽 정렬) 표시
         }
-        Log.d("AlignTest", "alignButtonIndex: $alignButtonIndex")
 
         // 이전에 선택된 버튼의 상태를 초기화
         for (i in 0 until linearLayoutTextAlign.childCount) {

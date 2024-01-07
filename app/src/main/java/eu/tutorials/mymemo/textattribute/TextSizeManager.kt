@@ -1,7 +1,6 @@
 package eu.tutorials.mymemo.textattribute
 
 import android.text.style.AbsoluteSizeSpan
-import android.util.Log
 import android.widget.Spinner
 
 class TextSizeManager(private val editContent: CustomEditText) {
@@ -39,7 +38,6 @@ class TextSizeManager(private val editContent: CustomEditText) {
             currentSizeSp =
                 (defaultSizePx / editContent.context.resources.displayMetrics.scaledDensity).toInt()
         }
-        Log.d("textSizeTest", "currentSizeSp : $currentSizeSp")
         val spinnerPosition = if(spans.isEmpty()){
             textSizeOptions.indexOf(15.toString())
         } else if (spans.distinct().size == 1) {

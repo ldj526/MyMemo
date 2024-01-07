@@ -3,6 +3,9 @@ package eu.tutorials.mymemo.activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Parcel
+import android.text.Spannable
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -55,7 +58,8 @@ class MemoListAdapter :
         fun bind(memo: Memo) {
             id.text = memo.id.toString()
             title.text = memo.title
-            content.text = memo.content
+            val loadedSpannable = deserializeSpannable(memo.content!!)
+            content.setText(loadedSpannable, TextView.BufferType.SPANNABLE)
             date.text = convertTimestampToDate(memo.date!!)
             checkBox.isChecked = memo.isChecked
             val bitmap = loadBitmapFromInternalStorage(memo.imagePath!!)
@@ -85,6 +89,16 @@ class MemoListAdapter :
         }
     }
 
+    // 저장된 데이터 로드 및 역직렬화
+    private fun deserializeSpannable(spannableBytes: ByteArray): Spannable {
+        val parcel = Parcel.obtain()
+        parcel.unmarshall(spannableBytes, 0, spannableBytes.size)
+        parcel.setDataPosition(0)
+        val spannable = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(parcel) as Spannable
+        parcel.recycle()
+        return spannable
+    }
+
     private fun loadBitmapFromInternalStorage(filePath: String): Bitmap? {
         return try {
             BitmapFactory.decodeFile(filePath)
@@ -98,11 +112,6 @@ class MemoListAdapter :
     fun setCheckboxVisibility(isVisible: Boolean) {
         showCheckBoxes = isVisible
         notifyDataSetChanged()
-    }
-
-    // memoList의 상태를 함수화
-    fun getCheckboxStates(): List<Boolean> {
-        return memoList.map { it.isChecked }
     }
 
     // checkbox check 상태 확인
@@ -122,7 +131,7 @@ class MemoListAdapter :
         memoList.clear()
         for (item in fullList) {
             if (item.title?.lowercase()?.contains(search.lowercase()) == true ||
-                item.content?.lowercase()?.contains(search.lowercase()) == true
+                item.content?.toString()!!.lowercase().contains(search.lowercase()) == true
             ) {
                 memoList.add(item)
             }

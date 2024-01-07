@@ -10,13 +10,13 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
+import android.os.Parcel
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextUtils
 import android.text.style.AbsoluteSizeSpan
 import android.text.style.StrikethroughSpan
 import android.text.style.UnderlineSpan
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -32,9 +32,7 @@ import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
-import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.core.view.ContentInfoCompat.Flags
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.get
@@ -97,7 +95,6 @@ class MemoFragment : Fragment() {
 
     private var currentMemo: Memo? = null
     private lateinit var currentTitle: String
-    private lateinit var currentContent: String
     private var currentId: Int? = null
     private var bitmap: Bitmap? = null
 
@@ -105,7 +102,6 @@ class MemoFragment : Fragment() {
         arguments?.let {
             isEditMode = it.getBoolean("isEditMode", false)
             currentMemo = it.getParcelable("currentMemo")
-            Log.d("MemoFragment", "MemoFragment onCreate: $isEditMode")
         }
         super.onCreate(savedInstanceState)
     }
@@ -183,16 +179,13 @@ class MemoFragment : Fragment() {
     }
 
     private fun createMenuProvider(): MenuProvider {
-        Log.d("MemoFragment", "createMenuProvider() 실행")
         return object : MenuProvider{
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                Log.d("MemoFragment", "createMenuProvider() onCreateMenu")
                 menuInflater.inflate(R.menu.text_bottom_app_bar_menu, menu)
 
                 val textSizeSpinnerItem = menu.findItem(R.id.textSize)
                 val textSizeSpinner = textSizeSpinnerItem?.actionView as Spinner
                 val textSizeOptions = arrayOf("12", "13", "14", "15", "16", "17", "18", "19", "20")
-                Log.d("MemoFragment", "createMenuProvider() object")
                 val adapter =
                     ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, textSizeOptions)
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -285,21 +278,16 @@ class MemoFragment : Fragment() {
                         drawingView.enableDrawing()
                         drawBottomAppBar.visibility = View.VISIBLE
                         textBottomAppBar.visibility = View.GONE
-                        Log.d("MemoFragment", "drawMode 작동")
-                        Log.d("MemoFragment", "${drawBottomAppBar.visibility} 작동")
-                        Log.d("MemoFragment", "${textBottomAppBar.visibility} 작동")
                         return true
                     }
 
                     R.id.textStyle -> {
                         textStyleManager.showTextStyleChooserDialog(linearLayoutTextStyle)
-                        Log.d("MemoFragment", "textStyle 작동")
                         return true
                     }
 
                     R.id.textAlign -> {
                         textAlignmentManager.showTextAlignChooserDialog(linearLayoutTextAlign)
-                        Log.d("MemoFragment", "textAlign 작동")
                         return true
                     }
                 }
@@ -451,10 +439,11 @@ class MemoFragment : Fragment() {
         return returnedBitmap
     }
 
+    // 저장되어 있는 메모 정보 가져오기
     private fun getMemoInfo(currentMemo: Memo) {
         currentId = currentMemo.id
         currentTitle = currentMemo.title!!
-        currentContent = currentMemo.content!!
+        val loadedSpannable = deserializeSpannable(currentMemo.content!!)
         bitmap = currentMemo.imagePath?.let { loadBitmapFromInternalStorage(it) }
         bitmap?.let {
             // DrawingView에 Bitmap 설정
@@ -462,40 +451,32 @@ class MemoFragment : Fragment() {
         }
 
         editTitle.setText(currentTitle)
-        editContent.setText(currentContent)
+        editContent.setText(loadedSpannable, TextView.BufferType.SPANNABLE)
     }
 
+    // 메모 저장
     private fun saveMemo() {
-        Log.d("MemoFragment", "isEditMode: $isEditMode")
         if (isEditMode) {
             // EditMemoActivity에서의 동작
             val title = editTitle.text.toString()
-            val content = editContent.text.toString()
+            val content = serializeSpannable(editContent)
             val bitmap = getBitmapFromView(drawingView)
-            Log.d("MemoFragment", "currentMemo : $currentMemo")
             saveBitmapToFileInternalStorage(bitmap, currentMemo?.date!!)
-            if (TextUtils.isEmpty(title) || TextUtils.isEmpty(content)) {
-                Toast.makeText(requireContext(), "제목과 내용을 입력해주세요.", Toast.LENGTH_LONG).show()
-            } else {
-                val memo = Memo(currentId!!, title, content, currentMemo?.date, false, folderId, currentMemo?.imagePath)
-                memoViewModel.update(memo)
-            }
+            val memo = Memo(currentId!!, title, content, currentMemo?.date, false, folderId, currentMemo?.imagePath)
+            memoViewModel.update(memo)
 
         } else {
             // NewMemoActivity에서의 동작
             val title = editTitle.text.toString()
-            val content = editContent.text.toString()
-            if (TextUtils.isEmpty(title) || TextUtils.isEmpty(content)) {
-                Toast.makeText(requireContext(), "제목과 내용을 입력해주세요.", Toast.LENGTH_LONG).show()
-            } else {
-                val timeStamp = System.currentTimeMillis()
-                val bitmap = getBitmapFromView(drawingView)
-                val memo = Memo(null, title, content, timeStamp, false, folderId, saveBitmapToFileInternalStorage(bitmap, timeStamp))
-                memoViewModel.insert(memo)
-            }
+            val content = serializeSpannable(editContent)
+            val timeStamp = System.currentTimeMillis()
+            val bitmap = getBitmapFromView(drawingView)
+            val memo = Memo(null, title, content, timeStamp, false, folderId, saveBitmapToFileInternalStorage(bitmap, timeStamp))
+            memoViewModel.insert(memo)
         }
     }
 
+    // 내부 저장소로부터 bitmap 가져오기
     private fun loadBitmapFromInternalStorage(filePath: String): Bitmap? {
         return try {
             BitmapFactory.decodeFile(filePath)
@@ -503,6 +484,26 @@ class MemoFragment : Fragment() {
             e.printStackTrace()
             null
         }
+    }
+
+    // spannable 추출 및 직렬화
+    private fun serializeSpannable(editText: EditText): ByteArray {
+        val spannable = editText.text as Spannable
+        val parcel = Parcel.obtain()
+        TextUtils.writeToParcel(spannable, parcel, 0)
+        val spannableBytes = parcel.marshall()
+        parcel.recycle()
+        return spannableBytes
+    }
+
+    // 저장된 데이터 로드 및 역직렬화
+    private fun deserializeSpannable(spannableBytes: ByteArray): Spannable {
+        val parcel = Parcel.obtain()
+        parcel.unmarshall(spannableBytes, 0, spannableBytes.size)
+        parcel.setDataPosition(0)
+        val spannable = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(parcel) as Spannable
+        parcel.recycle()
+        return spannable
     }
 
     companion object {
